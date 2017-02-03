@@ -1,0 +1,4 @@
+<resources>
+    <string name="app_name">ShiftManager</string>
+    <string name="title_shift_detail">Shift Detail</string>
+</resources>
