@@ -34,7 +34,7 @@ public class ShiftListActivity extends AppCompatActivity {
      * device.
      */
     private boolean mTwoPane;
-    //d4e7430f1534a12df46cedd1ac369935436dbb94  -
+
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -65,9 +65,19 @@ public class ShiftListActivity extends AppCompatActivity {
             // activity should be in two-pane mode.
             mTwoPane = true;
         }
+
+
+
     }
 
     private void setupRecyclerView(@NonNull RecyclerView recyclerView) {
+
+        ShiftController shiftController = new ShiftController(this);
+
+        //shiftController.execute("GET","/business");
+        //shiftController.execute("POST","/shift/start");
+        //shiftController.execute("POST","/shift/end");
+        shiftController.execute("GET","/shifts");
         recyclerView.setAdapter(new SimpleItemRecyclerViewAdapter(DummyContent.ITEMS));
     }
 
