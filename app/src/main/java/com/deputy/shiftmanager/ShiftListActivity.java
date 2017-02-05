@@ -26,6 +26,7 @@ import android.widget.TextView;
 
 
 import com.deputy.shiftmanager.dummy.DummyContent;
+import com.deputy.shiftmanager.Shift.ShiftItem;
 
 import org.json.JSONArray;
 import org.json.JSONException;
@@ -137,6 +138,7 @@ public class ShiftListActivity extends AppCompatActivity {
             holder.mItem = mValues.get(position);
             holder.mIdView.setText(mValues.get(position).id);
             holder.mContentView.setText(mValues.get(position).image);
+
 
             holder.mView.setOnClickListener(new View.OnClickListener() {
                 @Override
@@ -356,13 +358,21 @@ public class ShiftListActivity extends AppCompatActivity {
         }
 
         @Override
-        protected void onPostExecute(ShiftItem[] result) {
+        protected void onPostExecute(Shift.ShiftItem[] result) {
             if (result != null) {
 
-                List<ShiftItem> shiftList = new ArrayList<ShiftItem>();
+                //Creating the list of ShiftItems to populate RecycleView adapter
+                List<ShiftItem> shiftList;// = new ArrayList<ShiftItem>();
                 shiftList = Arrays.asList(result);
-
                 setupRecyclerView((RecyclerView) recyclerView, shiftList);
+
+                //Adding the shifts so they can be found in ShiftDetailFragmet
+                Shift shift = new Shift();
+                for (int i = 0; i < result.length; i++) {
+                    shift.addItem(result[i]);
+                }
+                //shift.addItem(result[0]);
+
 
                /* recyclerView.setAdapter(new SimpleItemRecyclerViewAdapter(DummyContent.ITEMS));
                 this.recyclerView = new RecyclerView(;
@@ -377,31 +387,5 @@ public class ShiftListActivity extends AppCompatActivity {
 
     }//End AsyncTast Class
 
-    public static class ShiftItem {
-        public final String id;
-        public final String start;
-        public final String end;
-        public final String startLatitude;
-        public final String startLongitude;
-        public final String endLatitude;
-        public final String endLongitude;
-        public final String image;
 
-
-
-        public ShiftItem(String id, String start, String end, String startLatitude,
-                         String startLongitude, String endLatitude, String endLongitude,
-                         String image) {
-            this.id = id;
-            this.start = start;
-            this.end = end;
-            this.startLatitude = startLatitude;
-            this.startLongitude = startLongitude;
-            this.endLatitude = endLatitude;
-            this.endLongitude = endLongitude;
-            this.image = image;
-
-        }
-
-    }//End Class ShiftItem
 }
