@@ -1,4 +1,6 @@
 <resources>
     <string name="app_name">Shift Manager</string>
     <string name="title_shift_detail">Shift Detail</string>
+    <string name="menu_start_shift">Start Shift</string>
+    <string name="menu_end_shift">End Shift</string>
 </resources>

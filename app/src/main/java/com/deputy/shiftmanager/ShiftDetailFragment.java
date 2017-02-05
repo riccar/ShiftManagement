@@ -9,7 +9,6 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.widget.TextView;
 
-import com.deputy.shiftmanager.dummy.DummyContent;
 
 /**
  * A fragment representing a single Shift detail screen.
@@ -25,9 +24,9 @@ public class ShiftDetailFragment extends Fragment {
     public static final String ARG_ITEM_ID = "item_id";
 
     /**
-     * The dummy content this fragment is presenting.
+     * The content this fragment is presenting.
      */
-    //private DummyContent.DummyItem mItem;
+
     private Shift.ShiftItem mItem;
 
     private static final String lineBreak = System.getProperty("line.separator");
@@ -44,10 +43,8 @@ public class ShiftDetailFragment extends Fragment {
         super.onCreate(savedInstanceState);
 
         if (getArguments().containsKey(ARG_ITEM_ID)) {
-            // Load the dummy content specified by the fragment
-            // arguments. In a real-world scenario, use a Loader
-            // to load content from a content provider.
-            //mItem = DummyContent.ITEM_MAP.get(getArguments().getString(ARG_ITEM_ID));
+            // Load the content specified by the fragment
+
             mItem = Shift.ITEM_MAP.get(getArguments().getString(ARG_ITEM_ID));
 
             Activity activity = this.getActivity();
@@ -64,7 +61,7 @@ public class ShiftDetailFragment extends Fragment {
                              Bundle savedInstanceState) {
         View rootView = inflater.inflate(R.layout.shift_detail, container, false);
 
-        // Show the dummy content as text in a TextView.
+        // Show the content as text in a TextView.
         if (mItem != null) {
             TextView shiftDetail = ((TextView) rootView.findViewById(R.id.shift_detail));//.setText(mItem.id + lineBreak + mItem.start + lineBreak + mItem.end);
 

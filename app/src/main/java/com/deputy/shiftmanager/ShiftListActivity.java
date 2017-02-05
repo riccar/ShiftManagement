@@ -19,10 +19,13 @@ import android.support.design.widget.FloatingActionButton;
 import android.support.design.widget.Snackbar;
 import android.util.Log;
 import android.view.LayoutInflater;
+import android.view.Menu;
+import android.view.MenuItem;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.ImageView;
 import android.widget.TextView;
+
 
 
 import com.deputy.shiftmanager.dummy.DummyContent;
@@ -105,6 +108,7 @@ public class ShiftListActivity extends AppCompatActivity {
         shiftController.execute("GET","/shifts");
 
     }
+
 
     private void setupRecyclerView(@NonNull RecyclerView recyclerView, List<ShiftItem> shiftItems) {
 
@@ -366,26 +370,50 @@ public class ShiftListActivity extends AppCompatActivity {
                 shiftList = Arrays.asList(result);
                 setupRecyclerView((RecyclerView) recyclerView, shiftList);
 
-                //Adding the shifts so they can be found in ShiftDetailFragmet
+                //Adding the shifts so they can be found in ShiftDetailFragment
                 Shift shift = new Shift();
                 for (int i = 0; i < result.length; i++) {
                     shift.addItem(result[i]);
                 }
-                //shift.addItem(result[0]);
 
-
-               /* recyclerView.setAdapter(new SimpleItemRecyclerViewAdapter(DummyContent.ITEMS));
-                this.recyclerView = new RecyclerView(;
-
-                final View recicleView = (RecycleView) (WorkoutRecordFragment)getView().findViewById(R.id.submitRecordWorkout);
-                this. .clear();
-                mForecastAdapter.addAll(result);*/
 
             }
         }
-
-
     }//End AsyncTast Class
 
+    @Override
+    public boolean onCreateOptionsMenu(Menu menu) {
+        // Inflate the menu; this adds items to the action bar if it is present.
+        getMenuInflater().inflate(R.menu.menu_main, menu);
+        return true;
+    }
 
+    @Override
+    public boolean onOptionsItemSelected(MenuItem item) {
+        // Handle action bar item clicks here. The action bar will
+        // automatically handle clicks on the Home/Up button, so long
+        // as you specify a parent activity in AndroidManifest.xml.
+        int id = item.getItemId();
+
+        //noinspection SimplifiableIfStatement
+        if (id == R.id.menu_start_shift) {
+            StartStopShift startStopShift = new StartStopShift(recyclerView);
+            startStopShift.execute("POST","/shift/start");
+            //Refresh the list of shift to show started shift in list
+            ShiftController shiftController = new ShiftController(this);
+            shiftController.execute("GET","/shifts");
+            return true;
+        }
+
+        if (id == R.id.menu_end_shift) {
+            StartStopShift startStopShift = new StartStopShift(recyclerView);
+            startStopShift.execute("POST","/shift/end");
+            //Refresh the list of shift to show details of ended shift
+            ShiftController shiftController = new ShiftController(this);
+            shiftController.execute("GET","/shifts");
+            return true;
+        }
+
+        return super.onOptionsItemSelected(item);
+    }
 }
