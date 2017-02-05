@@ -25,8 +25,13 @@ import java.io.InputStreamReader;
 import java.io.OutputStream;
 import java.io.OutputStreamWriter;
 import java.net.URL;
+import java.text.DateFormat;
+import java.text.SimpleDateFormat;
 import java.util.Arrays;
+import java.util.Calendar;
+import java.util.Date;
 import java.util.List;
+import java.util.TimeZone;
 
 import javax.net.ssl.HttpsURLConnection;
 
@@ -48,10 +53,12 @@ public class StartStopShift extends AsyncTask<String, Void, Boolean> {
     private final String LOG_TAG = com.deputy.shiftmanager.ShiftListActivity.ShiftController.class.getSimpleName();
     //call: /shift/start or /shift/stop
     private String call;
-    private View mContext;
+    private View mContextView;
+    private Context mContext;
 
-    public StartStopShift(View mContext) {
-        this.mContext = mContext;
+    public StartStopShift(View mContext, Context context) {
+        this.mContextView = mContext;
+        this.mContext = context;
     }
 
     @Override
@@ -77,44 +84,35 @@ public class StartStopShift extends AsyncTask<String, Void, Boolean> {
 
             //Log.v(LOG_TAG, "POST Code " + urlConnection.getResponseCode() + " " + urlConnection.getResponseMessage() + " " + urlConnection.getErrorStream());
 
-            if (call == "/shift/start" || call == "/shift/end") {
-                //Location location = null;
-                //LocationManager lm = (LocationManager) mContext.getSystemService(Context.LOCATION_SERVICE);
+            //Get device location and current time
+            String latitude = params[2];
+            String longitude = params[3];
 
-               // if (mContext.checkCallingOrSelfPermission(Manifest.permission.ACCESS_FINE_LOCATION) == PackageManager.PERMISSION_GRANTED) {
-                    //location = lm.getLastKnownLocation(LocationManager.PASSIVE_PROVIDER);
-                //}
-                //TODO: Get device location and current time
-                double longitude = -33.8459829;//location.getLongitude();
-                double latitude = 152.1546899;//location.getLatitude();
+            TimeZone tz = TimeZone.getTimeZone("UTC");
+            DateFormat df = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss");
+            df.setTimeZone(tz);
+            String nowAsISO = df.format(new Date());
 
-
-                JSONObject JSONQuery = new JSONObject();
-
-                try {
-                    JSONQuery.put("time", "2017-02-17T06:37:57+00:00");
-                    JSONQuery.put("latitude", Double.toString(longitude));
-                    JSONQuery.put("longitude", Double.toString(latitude));
+            JSONObject JSONQuery = new JSONObject();
+            //"2017-02-17T06:37:57+00:00"
+            try {
+                JSONQuery.put("time", nowAsISO);
+                JSONQuery.put("latitude", latitude);
+                JSONQuery.put("longitude", longitude);
 
 
-                } catch (JSONException e) {
-                    Log.v(LOG_TAG, e.getMessage());
-                }
-
-                Uri.Builder builder = new Uri.Builder()
-                        .appendQueryParameter("time", "2017-02-17T06:35:57+00:00")
-                        .appendQueryParameter("latitude", Double.toString(longitude))
-                        .appendQueryParameter("longitude", Double.toString(latitude));
-                String query = builder.build().getEncodedQuery();
-
-                OutputStream os = urlConnection.getOutputStream();
-                BufferedWriter writer = new BufferedWriter(
-                        new OutputStreamWriter(os, "UTF-8"));
-                writer.write(JSONQuery.toString());
-                writer.flush();
-                writer.close();
-                os.close();
+            } catch (JSONException e) {
+                Log.v(LOG_TAG, e.getMessage());
             }
+
+            OutputStream os = urlConnection.getOutputStream();
+            BufferedWriter writer = new BufferedWriter(
+                    new OutputStreamWriter(os, "UTF-8"));
+            writer.write(JSONQuery.toString());
+            writer.flush();
+            writer.close();
+            os.close();
+
 
             // Read the input stream into a String
             InputStream inputStream = urlConnection.getInputStream();
@@ -182,7 +180,7 @@ public class StartStopShift extends AsyncTask<String, Void, Boolean> {
         } else {
             message = "A shift is running. Stop it before creating a new one";
         }
-        Snackbar.make(mContext, message, Snackbar.LENGTH_LONG)
+        Snackbar.make(mContextView, message, Snackbar.LENGTH_LONG)
                 .setAction("Action", null).show();
     }
 }//End AsyncTask Class

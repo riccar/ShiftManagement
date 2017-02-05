@@ -6,7 +6,9 @@ import android.content.Intent;
 import android.content.pm.PackageManager;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
+import android.location.Criteria;
 import android.location.Location;
+import android.location.LocationListener;
 import android.location.LocationManager;
 import android.net.Uri;
 import android.os.AsyncTask;
@@ -25,11 +27,9 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.widget.ImageView;
 import android.widget.TextView;
-
-
-
 import com.deputy.shiftmanager.dummy.DummyContent;
 import com.deputy.shiftmanager.Shift.ShiftItem;
+import com.google.android.gms.common.api.GoogleApiClient;
 
 import org.json.JSONArray;
 import org.json.JSONException;
@@ -50,6 +50,7 @@ import java.util.List;
 
 import javax.net.ssl.HttpsURLConnection;
 
+
 /**
  * An activity representing a list of Shifts. This activity
  * has different presentations for handset and tablet-size devices. On
@@ -66,6 +67,10 @@ public class ShiftListActivity extends AppCompatActivity {
      */
     private boolean mTwoPane;
     public View recyclerView;
+    private LocationManager locationManager;
+    private String provider;
+    private double longitude = 0.00000;
+    private double latitude = 0.00000;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -97,15 +102,77 @@ public class ShiftListActivity extends AppCompatActivity {
             mTwoPane = true;
         }
 
+        //Location location = null;
+        // LocationManager lm = (LocationManager) this.getSystemService(Context.LOCATION_SERVICE);
+
+        /*String locationProvider = LocationManager.NETWORK_PROVIDER;
+        Location lastlocation = locationManager.getLastKnownLocation(locationProvider);
+        */
+        //lm.requestLocationUpdates(LocationManager.GPS_PROVIDER, 0, 0, this);
+        //lm.requestLocationUpdates(LocationManager.PASSIVE_PROVIDER,1000,0,this);
+        /*if (this.checkCallingOrSelfPermission(Manifest.permission.ACCESS_FINE_LOCATION) == PackageManager.PERMISSION_GRANTED) {
+            location = lm.getLastKnownLocation(LocationManager.GPS_PROVIDER);
+        }*/
+        //TODO: Get device location and current time
+        //double longitude = -33.8459829;
+        //double latitude = 152.1546899;
+        // double longitude = location.getLongitude();
+
+        locationManager = (LocationManager) this.getSystemService(Context.LOCATION_SERVICE);
+
+        // Define a listener that responds to location updates
+        LocationListener locationListener = new LocationListener() {
+            public void onLocationChanged(Location location) {
+                // Called when a new location is found by the network location provider.
+
+                makeUseOfNewLocation(location);
+            }
+
+            public void onStatusChanged(String provider, int status, Bundle extras) {
+            }
+
+            public void onProviderEnabled(String provider) {
+            }
+
+            public void onProviderDisabled(String provider) {
+            }
+        };
+        Criteria criteria = new Criteria();
+        criteria.setAccuracy(Criteria.NO_REQUIREMENT);
+        String provider = locationManager.getBestProvider(criteria, true);
+
+        // Register the listener with the Location Manager to receive location updates
+        if (this.checkCallingOrSelfPermission(Manifest.permission.ACCESS_FINE_LOCATION) == PackageManager.PERMISSION_GRANTED) {
+            //Min Time and Distance is set to 0 for testing purposes.
+            //locationManager.requestLocationUpdates(LocationManager.NETWORK_PROVIDER, 0, 0, locationListener);
+            locationManager.requestLocationUpdates(provider, 0, 0, locationListener);
+        }
 
 
     }
+
+    void makeUseOfNewLocation(Location location) {
+        longitude = location.getLongitude();
+        latitude = location.getLatitude();
+    }
+
+    /*@Override
+    protected void onResume() {
+        super.onResume();
+        locationManager.requestLocationUpdates(provider, 0, 0, this);
+    }
+
+    @Override
+    public void onPause() {
+        super.onPause();
+        locationManager.removeUpdates(this);
+    }*/
 
     @Override
     public void onStart() {
         super.onStart();
         ShiftController shiftController = new ShiftController(this);
-        shiftController.execute("GET","/shifts");
+        shiftController.execute("GET", "/shifts");
 
     }
 
@@ -120,6 +187,7 @@ public class ShiftListActivity extends AppCompatActivity {
         //shiftController.execute("GET","/shifts");
         recyclerView.setAdapter(new SimpleItemRecyclerViewAdapter(shiftItems));
     }
+
 
     public class SimpleItemRecyclerViewAdapter
             extends RecyclerView.Adapter<SimpleItemRecyclerViewAdapter.ViewHolder> {
@@ -204,9 +272,10 @@ public class ShiftListActivity extends AppCompatActivity {
         // Will contain the raw JSON response as a string.
         String jsonStr = null;
 
-        private final String LOG_TAG = com.deputy.shiftmanager.ShiftListActivity.ShiftController.class.getSimpleName();
+        private final String LOG_TAG = ShiftController.class.getSimpleName();
 
         private Context mContext;
+
         public ShiftController(Context mContext) {
             this.mContext = mContext;
         }
@@ -347,14 +416,14 @@ public class ShiftListActivity extends AppCompatActivity {
 
             ShiftItem shiftItemArr[] = new ShiftItem[totalShifts];
 
-            for(int i = 0; i < totalShifts; i++) {
+            for (int i = 0; i < totalShifts; i++) {
 
                 //Get the JSON object representing the shift
                 JSONObject shiftJsonObj = shiftArray.getJSONObject(i);
                 ShiftItem shitItem = new ShiftItem(shiftJsonObj.getString("id"),
-                        shiftJsonObj.getString("start"),shiftJsonObj.getString("end"),
-                        shiftJsonObj.getString("startLatitude"),shiftJsonObj.getString("startLongitude"),
-                        shiftJsonObj.getString("endLatitude"),shiftJsonObj.getString("endLongitude"),
+                        shiftJsonObj.getString("start"), shiftJsonObj.getString("end"),
+                        shiftJsonObj.getString("startLatitude"), shiftJsonObj.getString("startLongitude"),
+                        shiftJsonObj.getString("endLatitude"), shiftJsonObj.getString("endLongitude"),
                         shiftJsonObj.getString("image"));
                 shiftItemArr[i] = shitItem;
             }
@@ -362,7 +431,7 @@ public class ShiftListActivity extends AppCompatActivity {
         }
 
         @Override
-        protected void onPostExecute(Shift.ShiftItem[] result) {
+        protected void onPostExecute(ShiftItem[] result) {
             if (result != null) {
 
                 //Creating the list of ShiftItems to populate RecycleView adapter
@@ -397,20 +466,20 @@ public class ShiftListActivity extends AppCompatActivity {
 
         //noinspection SimplifiableIfStatement
         if (id == R.id.menu_start_shift) {
-            StartStopShift startStopShift = new StartStopShift(recyclerView);
-            startStopShift.execute("POST","/shift/start");
+            StartStopShift startStopShift = new StartStopShift(recyclerView, this);
+            startStopShift.execute("POST", "/shift/start", Double.toString(latitude), Double.toString(longitude));
             //Refresh the list of shift to show started shift in list
             ShiftController shiftController = new ShiftController(this);
-            shiftController.execute("GET","/shifts");
+            shiftController.execute("GET", "/shifts");
             return true;
         }
 
         if (id == R.id.menu_end_shift) {
-            StartStopShift startStopShift = new StartStopShift(recyclerView);
-            startStopShift.execute("POST","/shift/end");
+            StartStopShift startStopShift = new StartStopShift(recyclerView, this);
+            startStopShift.execute("POST", "/shift/end", Double.toString(latitude), Double.toString(longitude));
             //Refresh the list of shift to show details of ended shift
             ShiftController shiftController = new ShiftController(this);
-            shiftController.execute("GET","/shifts");
+            shiftController.execute("GET", "/shifts");
             return true;
         }
 
