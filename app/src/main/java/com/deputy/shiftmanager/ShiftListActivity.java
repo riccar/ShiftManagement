@@ -71,6 +71,7 @@ public class ShiftListActivity extends AppCompatActivity {
     private String provider;
     private double longitude = 0.00000;
     private double latitude = 0.00000;
+    private LocationListener locationListener = null;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -102,26 +103,10 @@ public class ShiftListActivity extends AppCompatActivity {
             mTwoPane = true;
         }
 
-        //Location location = null;
-        // LocationManager lm = (LocationManager) this.getSystemService(Context.LOCATION_SERVICE);
-
-        /*String locationProvider = LocationManager.NETWORK_PROVIDER;
-        Location lastlocation = locationManager.getLastKnownLocation(locationProvider);
-        */
-        //lm.requestLocationUpdates(LocationManager.GPS_PROVIDER, 0, 0, this);
-        //lm.requestLocationUpdates(LocationManager.PASSIVE_PROVIDER,1000,0,this);
-        /*if (this.checkCallingOrSelfPermission(Manifest.permission.ACCESS_FINE_LOCATION) == PackageManager.PERMISSION_GRANTED) {
-            location = lm.getLastKnownLocation(LocationManager.GPS_PROVIDER);
-        }*/
-        //TODO: Get device location and current time
-        //double longitude = -33.8459829;
-        //double latitude = 152.1546899;
-        // double longitude = location.getLongitude();
-
         locationManager = (LocationManager) this.getSystemService(Context.LOCATION_SERVICE);
 
         // Define a listener that responds to location updates
-        LocationListener locationListener = new LocationListener() {
+        locationListener = new LocationListener() {
             public void onLocationChanged(Location location) {
                 // Called when a new location is found by the network location provider.
 
@@ -139,13 +124,18 @@ public class ShiftListActivity extends AppCompatActivity {
         };
         Criteria criteria = new Criteria();
         criteria.setAccuracy(Criteria.NO_REQUIREMENT);
-        String provider = locationManager.getBestProvider(criteria, true);
+        provider = locationManager.getBestProvider(criteria, true);
 
         // Register the listener with the Location Manager to receive location updates
-        if (this.checkCallingOrSelfPermission(Manifest.permission.ACCESS_FINE_LOCATION) == PackageManager.PERMISSION_GRANTED) {
+        if (checkCallingOrSelfPermission(Manifest.permission.ACCESS_FINE_LOCATION) == PackageManager.PERMISSION_GRANTED) {
             //Min Time and Distance is set to 0 for testing purposes.
             //locationManager.requestLocationUpdates(LocationManager.NETWORK_PROVIDER, 0, 0, locationListener);
-            locationManager.requestLocationUpdates(provider, 0, 0, locationListener);
+            if (provider != null) {
+                locationManager.requestLocationUpdates(provider, 0, 0, locationListener);
+            }
+            /*Location location = locationManager.getLastKnownLocation(provider);
+            longitude = location.getLongitude();
+            latitude = location.getLatitude();*/
         }
 
 
@@ -156,17 +146,21 @@ public class ShiftListActivity extends AppCompatActivity {
         latitude = location.getLatitude();
     }
 
-    /*@Override
+    @Override
     protected void onResume() {
         super.onResume();
-        locationManager.requestLocationUpdates(provider, 0, 0, this);
+        if (checkCallingOrSelfPermission(Manifest.permission.ACCESS_FINE_LOCATION) == PackageManager.PERMISSION_GRANTED && provider != null) {
+            locationManager.requestLocationUpdates(provider, 0, 0, locationListener);
+        }
     }
 
     @Override
     public void onPause() {
         super.onPause();
-        locationManager.removeUpdates(this);
-    }*/
+        if (checkCallingOrSelfPermission(Manifest.permission.ACCESS_FINE_LOCATION) == PackageManager.PERMISSION_GRANTED) {
+            locationManager.removeUpdates(locationListener);
+        }
+    }
 
     @Override
     public void onStart() {
@@ -179,12 +173,6 @@ public class ShiftListActivity extends AppCompatActivity {
 
     private void setupRecyclerView(@NonNull RecyclerView recyclerView, List<ShiftItem> shiftItems) {
 
-        //ShiftController shiftController = new ShiftController(this);
-
-        //shiftController.execute("GET","/business");
-        //shiftController.execute("POST","/shift/start");
-        //shiftController.execute("POST","/shift/end");
-        //shiftController.execute("GET","/shifts");
         recyclerView.setAdapter(new SimpleItemRecyclerViewAdapter(shiftItems));
     }
 
@@ -227,7 +215,6 @@ public class ShiftListActivity extends AppCompatActivity {
                         Context context = v.getContext();
                         Intent intent = new Intent(context, ShiftDetailActivity.class);
                         intent.putExtra(ShiftDetailFragment.ARG_ITEM_ID, holder.mItem.id);
-
                         context.startActivity(intent);
                     }
                 }
@@ -305,44 +292,6 @@ public class ShiftListActivity extends AppCompatActivity {
                 Log.v(LOG_TAG, "POST Code " + urlConnection.getResponseCode() + " " + urlConnection.getResponseMessage() + " " + urlConnection.getErrorStream());
                 if (urlConnection.getResponseCode() == urlConnection.HTTP_OK) {
 
-                    if (call == "/shift/start" || call == "/shift/end") {
-                        Location location = null;
-                        LocationManager lm = (LocationManager) mContext.getSystemService(Context.LOCATION_SERVICE);
-
-                        if (mContext.checkCallingOrSelfPermission(Manifest.permission.ACCESS_FINE_LOCATION) == PackageManager.PERMISSION_GRANTED) {
-                            location = lm.getLastKnownLocation(LocationManager.PASSIVE_PROVIDER);
-                        }
-                        //TODO: Get device location and current time
-                        double longitude = -33.8459829;//location.getLongitude();
-                        double latitude = 152.1546899;//location.getLatitude();
-
-
-                        JSONObject JSONQuery = new JSONObject();
-
-                        try {
-                            JSONQuery.put("time", "2017-02-17T06:37:57+00:00");
-                            JSONQuery.put("latitude", Double.toString(longitude));
-                            JSONQuery.put("longitude", Double.toString(latitude));
-
-
-                        } catch (JSONException e) {
-                            Log.v(LOG_TAG, "POST Code " + e.getMessage());
-                        }
-
-                        Uri.Builder builder = new Uri.Builder()
-                                .appendQueryParameter("time", "2017-02-17T06:35:57+00:00")
-                                .appendQueryParameter("latitude", Double.toString(longitude))
-                                .appendQueryParameter("longitude", Double.toString(latitude));
-                        String query = builder.build().getEncodedQuery();
-
-                        OutputStream os = urlConnection.getOutputStream();
-                        BufferedWriter writer = new BufferedWriter(
-                                new OutputStreamWriter(os, "UTF-8"));
-                        writer.write(JSONQuery.toString());
-                        writer.flush();
-                        writer.close();
-                        os.close();
-                    }
 
                     // Read the input stream into a String
                     InputStream inputStream = urlConnection.getInputStream();

@@ -9,6 +9,15 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.widget.TextView;
 
+import com.google.android.gms.maps.CameraUpdate;
+import com.google.android.gms.maps.CameraUpdateFactory;
+import com.google.android.gms.maps.GoogleMap;
+import com.google.android.gms.maps.MapFragment;
+import com.google.android.gms.maps.OnMapReadyCallback;
+import com.google.android.gms.maps.SupportMapFragment;
+import com.google.android.gms.maps.model.LatLng;
+import com.google.android.gms.maps.model.MarkerOptions;
+
 
 /**
  * A fragment representing a single Shift detail screen.
@@ -16,7 +25,7 @@ import android.widget.TextView;
  * in two-pane mode (on tablets) or a {@link ShiftDetailActivity}
  * on handsets.
  */
-public class ShiftDetailFragment extends Fragment {
+public class ShiftDetailFragment extends Fragment implements OnMapReadyCallback {
     /**
      * The fragment argument representing the item ID that this fragment
      * represents.
@@ -30,6 +39,8 @@ public class ShiftDetailFragment extends Fragment {
     private Shift.ShiftItem mItem;
 
     private static final String lineBreak = System.getProperty("line.separator");
+
+    private GoogleMap mMap;
 
     /**
      * Mandatory empty constructor for the fragment manager to instantiate the
@@ -54,6 +65,31 @@ public class ShiftDetailFragment extends Fragment {
                 appBarLayout.setTitle(mItem.id);
             }
         }
+
+    }
+
+    /**
+     * Manipulates the map once available.
+     * This callback is triggered when the map is ready to be used.
+     * This is where we can add markers or lines, add listeners or move the camera. In this case,
+     * we just add a marker near Sydney, Australia.
+     * If Google Play services is not installed on the device, the user will be prompted to install
+     * it inside the SupportMapFragment. This method will only be triggered once the user has
+     * installed Google Play services and returned to the app.
+     */
+    @Override
+    public void onMapReady(GoogleMap googleMap) {
+        mMap = googleMap;
+
+        // Add a marker in Sydney and move the camera
+        LatLng startPoint = new LatLng(Double.parseDouble(mItem.startLatitude), Double.parseDouble(mItem.startLongitude));
+        LatLng endPoint = new LatLng(Double.parseDouble(mItem.endLatitude), Double.parseDouble(mItem.endLongitude));
+        //LatLng sydney = new LatLng(-34, 151);
+        mMap.addMarker(new MarkerOptions().position(startPoint).title("Start"));
+        mMap.addMarker(new MarkerOptions().position(endPoint).title("End"));
+        //CameraUpdate zoom = CameraUpdateFactory.zoomTo(15);
+        //mMap.animateCamera(zoom);
+        mMap.moveCamera(CameraUpdateFactory.newLatLngZoom(startPoint, 13));
     }
 
     @Override
@@ -72,10 +108,21 @@ public class ShiftDetailFragment extends Fragment {
             shiftDetail.append("Start Longitude: " +  mItem.startLongitude + lineBreak);
             shiftDetail.append("End Latitude: " +  mItem.endLatitude + lineBreak);
             shiftDetail.append("End Longitude: " +  mItem.endLongitude + lineBreak);
-            shiftDetail.append("Image: " +  mItem.image + lineBreak);
+            //shiftDetail.append("Image: " +  mItem.image + lineBreak);
 
         }
 
         return rootView;
+    }
+
+    @Override
+    public void onActivityCreated(Bundle savedInstanceState) {
+        super.onActivityCreated(savedInstanceState);
+
+        // Obtain the SupportMapFragment and get notified when the map is ready to be used.
+        SupportMapFragment mapFragment = (SupportMapFragment) getChildFragmentManager()
+                .findFragmentById(R.id.map);
+        mapFragment.getMapAsync(this);
+        //getMapAsync(this);
     }
 }

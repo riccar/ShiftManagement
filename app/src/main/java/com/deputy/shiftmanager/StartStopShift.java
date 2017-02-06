@@ -178,7 +178,11 @@ public class StartStopShift extends AsyncTask<String, Void, Boolean> {
                 message = "The shift was successfully stopped";
             }
         } else {
-            message = "A shift is running. Stop it before creating a new one";
+            if (call == "/shift/start") {
+                message = "A shift is running. Stop it before creating a new one";
+            } else {
+                message = "No shift is running";
+            }
         }
         Snackbar.make(mContextView, message, Snackbar.LENGTH_LONG)
                 .setAction("Action", null).show();
