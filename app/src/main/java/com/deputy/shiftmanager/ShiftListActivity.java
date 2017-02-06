@@ -1,15 +1,20 @@
 package com.deputy.shiftmanager;
 
 import android.Manifest;
+import android.content.ContentValues;
 import android.content.Context;
 import android.content.Intent;
 import android.content.pm.PackageManager;
+import android.database.Cursor;
+import android.database.sqlite.SQLiteDatabase;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.location.Criteria;
 import android.location.Location;
 import android.location.LocationListener;
 import android.location.LocationManager;
+import android.net.ConnectivityManager;
+import android.net.NetworkInfo;
 import android.net.Uri;
 import android.os.AsyncTask;
 import android.os.Bundle;
@@ -42,6 +47,7 @@ import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.io.OutputStream;
 import java.io.OutputStreamWriter;
+import java.lang.reflect.Array;
 import java.net.MalformedURLException;
 import java.util.Arrays;
 import java.net.URL;
@@ -72,6 +78,7 @@ public class ShiftListActivity extends AppCompatActivity {
     private double longitude = 0.00000;
     private double latitude = 0.00000;
     private LocationListener locationListener = null;
+    private final String LOG_TAG = com.deputy.shiftmanager.ShiftListActivity.class.getSimpleName();
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -165,8 +172,57 @@ public class ShiftListActivity extends AppCompatActivity {
     @Override
     public void onStart() {
         super.onStart();
-        ShiftController shiftController = new ShiftController(this);
-        shiftController.execute("GET", "/shifts");
+       if (isNetworkAvailable()) {
+           ShiftController shiftController = new ShiftController(this);
+           shiftController.execute("GET", "/shifts");
+       } else {
+            //If no network is available show the shifts from DB
+           SQLiteDatabase db;
+           DBHelper dbHelper = new DBHelper(this);
+           db = dbHelper.getReadableDatabase();
+
+           String[] fields =  {DBContract.Shifts._ID, DBContract.Shifts.COLUMN_NAME_COL1,
+                   DBContract.Shifts.COLUMN_NAME_COL2, DBContract.Shifts.COLUMN_NAME_COL3,
+                   DBContract.Shifts.COLUMN_NAME_COL4, DBContract.Shifts.COLUMN_NAME_COL5,
+                   DBContract.Shifts.COLUMN_NAME_COL6, DBContract.Shifts.COLUMN_NAME_COL7};
+
+
+           Cursor cursor = db.query(DBContract.Shifts.TABLE_NAME, fields,
+                   null, //Condition
+                   null, //Value for condition
+                   null,null,null); //GroupBy, Having and OrderBy are not used.
+
+           //cursor.moveToFirst();
+           ArrayList<ShiftItem> shiftList = new ArrayList<>();
+           Shift shift = new Shift();
+           while (cursor.moveToNext()) {
+               ShiftItem shiftItem = new ShiftItem(cursor.getString(0),cursor.getString(1),
+                       cursor.getString(2),cursor.getString(3),cursor.getString(4),
+                       cursor.getString(5),cursor.getString(6),cursor.getString(7));
+               //Add shift to list that populates Recycle View
+               shiftList.add(shiftItem);
+               //Add shift to HasMap so it can be accessed from the Details View.
+               shift.addItem(shiftItem);
+           }
+           cursor.close();
+           db.close();
+
+           setupRecyclerView((RecyclerView) recyclerView, shiftList);
+
+       }
+
+
+    }
+
+    private boolean isNetworkAvailable() {
+        ConnectivityManager connectivityManager
+                = (ConnectivityManager) getSystemService(Context.CONNECTIVITY_SERVICE);
+        NetworkInfo activeNetworkInfo = connectivityManager.getActiveNetworkInfo();
+        return activeNetworkInfo != null && activeNetworkInfo.isConnected();
+    }
+
+    private void showOfflineShiftsFromDB() {
+        //
 
     }
 
@@ -197,7 +253,7 @@ public class ShiftListActivity extends AppCompatActivity {
         public void onBindViewHolder(final ViewHolder holder, int position) {
             holder.mItem = mValues.get(position);
             holder.mIdView.setText(mValues.get(position).id);
-            holder.mContentView.setText(mValues.get(position).image);
+            holder.mContentView.setText(mValues.get(position).start);
 
 
             holder.mView.setOnClickListener(new View.OnClickListener() {
@@ -392,12 +448,53 @@ public class ShiftListActivity extends AppCompatActivity {
                 Shift shift = new Shift();
                 for (int i = 0; i < result.length; i++) {
                     shift.addItem(result[i]);
+                    insertShiftInDB(result[i]);
                 }
 
+                //updateShiftsDB(ShiftItem[] result);
 
             }
         }
     }//End AsyncTast Class
+
+    private void insertShiftInDB(ShiftItem shiftItem) {
+        SQLiteDatabase db;
+        DBHelper dbHelper = new DBHelper(this);
+        db = dbHelper.getWritableDatabase();
+
+        //Delete all the shifts from DB
+        //db.delete(DBContract.Shifts.TABLE_NAME, null, null);
+        String query = "insert or replace into Shifts (" + DBContract.Shifts._ID + "," +
+                DBContract.Shifts.COLUMN_NAME_COL1 + "," + DBContract.Shifts.COLUMN_NAME_COL2 + "," +
+                DBContract.Shifts.COLUMN_NAME_COL3 + "," + DBContract.Shifts.COLUMN_NAME_COL4 + "," +
+                DBContract.Shifts.COLUMN_NAME_COL5 + "," + DBContract.Shifts.COLUMN_NAME_COL6 + "," +
+                DBContract.Shifts.COLUMN_NAME_COL7 +  ") values (?,?,?,?,?,?,?,?)";
+
+
+        db.execSQL(query, new String[]{shiftItem.id, shiftItem.start,shiftItem.end,
+                shiftItem.startLatitude, shiftItem.startLongitude, shiftItem.endLatitude,
+                shiftItem.endLongitude, shiftItem.image});
+
+        db.close();
+
+        //Insert shifts
+       /* ContentValues values = new ContentValues();
+        values.put(DBContract.Shifts.COLUMN_NAME_COL1, desc); //Description
+        values.put(DBContract.Game.COLUMN_NAME_COL2, price); //endDate
+        values.put(DBContract.Game.COLUMN_NAME_COL3, endDate); //endDate
+        values.put(DBContract.Game.COLUMN_NAME_COL4, endCals); //endCalories
+        values.put(DBContract.Game.COLUMN_NAME_COL5, 0); //moderated
+        values.put(DBContract.Game.COLUMN_NAME_COL6, 0); //locked
+        values.put(DBContract.Game.COLUMN_NAME_COL7, endHP); //End points
+        values.put(DBContract.Game.COLUMN_NAME_COL8, 1); //Game started: 1 = Started
+
+        // Insert the new game, returning the primary key value of the new row
+        newRowId = db.insert(
+                DBContract.Game.TABLE_NAME,
+                null,
+                values);*/
+
+    }
 
     @Override
     public boolean onCreateOptionsMenu(Menu menu) {
@@ -415,11 +512,19 @@ public class ShiftListActivity extends AppCompatActivity {
 
         //noinspection SimplifiableIfStatement
         if (id == R.id.menu_start_shift) {
-            StartStopShift startStopShift = new StartStopShift(recyclerView, this);
-            startStopShift.execute("POST", "/shift/start", Double.toString(latitude), Double.toString(longitude));
-            //Refresh the list of shift to show started shift in list
-            ShiftController shiftController = new ShiftController(this);
-            shiftController.execute("GET", "/shifts");
+            if (isNetworkAvailable()) {
+                StartStopShift startStopShift = new StartStopShift(recyclerView, this);
+                startStopShift.execute("POST", "/shift/start", Double.toString(latitude), Double.toString(longitude));
+                //Refresh the list of shift to show started shift in list
+                ShiftController shiftController = new ShiftController(this);
+                shiftController.execute("GET", "/shifts");
+            } else {
+                Snackbar.make(recyclerView, getString(R.string.no_network_error), Snackbar.LENGTH_LONG)
+                        .setAction("Action", null).show();
+                showOfflineShiftsFromDB();
+
+            }
+
             return true;
         }
 

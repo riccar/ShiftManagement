@@ -1,7 +1,18 @@
 <resources>
+    <!--Titles and menu labels-->
     <string name="app_name">Shift Manager</string>
     <string name="title_shift_detail">Shift Detail</string>
     <string name="menu_start_shift">Start Shift</string>
     <string name="menu_end_shift">End Shift</string>
     <string name="title_activity_map_shift">Map</string>
+
+    <!--Snackbar messages-->
+    <string name="no_network_error">No network connection detected</string>
+    <string name="shift_start_success">The new shift was successfully started</string>
+    <string name="shift_stop_success">The shift was successfully stopped</string>
+    <string name="shift_start_error">A shift is running. Stop it before creating a new one</string>
+    <string name="shift_stop_error">No shift is running</string>
+
+
+
 </resources>
