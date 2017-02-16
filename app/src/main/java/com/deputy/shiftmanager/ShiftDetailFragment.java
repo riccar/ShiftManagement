@@ -9,10 +9,8 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.widget.TextView;
 
-import com.google.android.gms.maps.CameraUpdate;
 import com.google.android.gms.maps.CameraUpdateFactory;
 import com.google.android.gms.maps.GoogleMap;
-import com.google.android.gms.maps.MapFragment;
 import com.google.android.gms.maps.OnMapReadyCallback;
 import com.google.android.gms.maps.SupportMapFragment;
 import com.google.android.gms.maps.model.LatLng;
@@ -39,8 +37,6 @@ public class ShiftDetailFragment extends Fragment implements OnMapReadyCallback 
     private Shift.ShiftItem mItem;
 
     private static final String lineBreak = System.getProperty("line.separator");
-
-    private GoogleMap mMap;
 
     /**
      * Mandatory empty constructor for the fragment manager to instantiate the
@@ -79,17 +75,16 @@ public class ShiftDetailFragment extends Fragment implements OnMapReadyCallback 
      */
     @Override
     public void onMapReady(GoogleMap googleMap) {
-        mMap = googleMap;
 
         // Add a marker in Sydney and move the camera
         LatLng startPoint = new LatLng(Double.parseDouble(mItem.startLatitude), Double.parseDouble(mItem.startLongitude));
         LatLng endPoint = new LatLng(Double.parseDouble(mItem.endLatitude), Double.parseDouble(mItem.endLongitude));
         //LatLng sydney = new LatLng(-34, 151);
-        mMap.addMarker(new MarkerOptions().position(startPoint).title("Start"));
-        mMap.addMarker(new MarkerOptions().position(endPoint).title("End"));
+        googleMap.addMarker(new MarkerOptions().position(startPoint).title("Start"));
+        googleMap.addMarker(new MarkerOptions().position(endPoint).title("End"));
         //CameraUpdate zoom = CameraUpdateFactory.zoomTo(15);
         //mMap.animateCamera(zoom);
-        mMap.moveCamera(CameraUpdateFactory.newLatLngZoom(startPoint, 13));
+        googleMap.moveCamera(CameraUpdateFactory.newLatLngZoom(startPoint, 13));
     }
 
     @Override

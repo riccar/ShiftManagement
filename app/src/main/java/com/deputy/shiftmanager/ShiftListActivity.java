@@ -1,21 +1,14 @@
 package com.deputy.shiftmanager;
 
 import android.Manifest;
-import android.content.ContentValues;
 import android.content.Context;
 import android.content.Intent;
 import android.content.pm.PackageManager;
 import android.database.Cursor;
 import android.database.sqlite.SQLiteDatabase;
-import android.graphics.Bitmap;
-import android.graphics.BitmapFactory;
-import android.location.Criteria;
 import android.location.Location;
-import android.location.LocationListener;
-import android.location.LocationManager;
 import android.net.ConnectivityManager;
 import android.net.NetworkInfo;
-import android.net.Uri;
 import android.os.AsyncTask;
 import android.os.Bundle;
 import android.support.annotation.NonNull;
@@ -30,25 +23,21 @@ import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
 import android.view.ViewGroup;
-import android.widget.ImageView;
 import android.widget.TextView;
-import com.deputy.shiftmanager.dummy.DummyContent;
 import com.deputy.shiftmanager.Shift.ShiftItem;
+import com.google.android.gms.common.ConnectionResult;
 import com.google.android.gms.common.api.GoogleApiClient;
+import com.google.android.gms.location.LocationServices;
 
 import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 
 import java.io.BufferedReader;
-import java.io.BufferedWriter;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
-import java.io.OutputStream;
-import java.io.OutputStreamWriter;
-import java.lang.reflect.Array;
-import java.net.MalformedURLException;
+import java.net.HttpURLConnection;
 import java.util.Arrays;
 import java.net.URL;
 import java.util.ArrayList;
@@ -65,20 +54,18 @@ import javax.net.ssl.HttpsURLConnection;
  * item details. On tablets, the activity presents the list of items and
  * item details side-by-side using two vertical panes.
  */
-public class ShiftListActivity extends AppCompatActivity {
+public class ShiftListActivity extends AppCompatActivity implements GoogleApiClient.ConnectionCallbacks, GoogleApiClient.OnConnectionFailedListener {
 
     /**
      * Whether or not the activity is in two-pane mode, i.e. running on a tablet
      * device.
      */
     private boolean mTwoPane;
-    public View recyclerView;
-    private LocationManager locationManager;
-    private String provider;
+    private View recyclerView;
     private double longitude = 0.00000;
     private double latitude = 0.00000;
-    private LocationListener locationListener = null;
     private final String LOG_TAG = com.deputy.shiftmanager.ShiftListActivity.class.getSimpleName();
+    private GoogleApiClient mGoogleApiClient;// = new GoogleApiClient.Builder(this);
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -110,70 +97,60 @@ public class ShiftListActivity extends AppCompatActivity {
             mTwoPane = true;
         }
 
-        locationManager = (LocationManager) this.getSystemService(Context.LOCATION_SERVICE);
-
-        // Define a listener that responds to location updates
-        locationListener = new LocationListener() {
-            public void onLocationChanged(Location location) {
-                // Called when a new location is found by the network location provider.
-
-                makeUseOfNewLocation(location);
-            }
-
-            public void onStatusChanged(String provider, int status, Bundle extras) {
-            }
-
-            public void onProviderEnabled(String provider) {
-            }
-
-            public void onProviderDisabled(String provider) {
-            }
-        };
-        Criteria criteria = new Criteria();
-        criteria.setAccuracy(Criteria.NO_REQUIREMENT);
-        provider = locationManager.getBestProvider(criteria, true);
-
-        // Register the listener with the Location Manager to receive location updates
-        if (checkCallingOrSelfPermission(Manifest.permission.ACCESS_FINE_LOCATION) == PackageManager.PERMISSION_GRANTED) {
-            //Min Time and Distance is set to 0 for testing purposes.
-            //locationManager.requestLocationUpdates(LocationManager.NETWORK_PROVIDER, 0, 0, locationListener);
-            if (provider != null) {
-                locationManager.requestLocationUpdates(provider, 0, 0, locationListener);
-            }
-            /*Location location = locationManager.getLastKnownLocation(provider);
-            longitude = location.getLongitude();
-            latitude = location.getLatitude();*/
+        // Create an instance of GoogleAPIClient.
+        if (mGoogleApiClient == null) {
+            mGoogleApiClient = new GoogleApiClient.Builder(this)
+                    .addConnectionCallbacks(this)
+                    .addOnConnectionFailedListener(this)
+                    .addApi(LocationServices.API)
+                    .build();
         }
 
 
-    }
 
-    void makeUseOfNewLocation(Location location) {
-        longitude = location.getLongitude();
-        latitude = location.getLatitude();
     }
 
     @Override
-    protected void onResume() {
-        super.onResume();
-        if (checkCallingOrSelfPermission(Manifest.permission.ACCESS_FINE_LOCATION) == PackageManager.PERMISSION_GRANTED && provider != null) {
-            locationManager.requestLocationUpdates(provider, 0, 0, locationListener);
+    public void onConnected(Bundle connectionHint) {
+        if (checkCallingOrSelfPermission(Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
+            Location mLastLocation = LocationServices.FusedLocationApi.getLastLocation(
+                    mGoogleApiClient);
+            if (mLastLocation != null) {
+                latitude = mLastLocation.getLatitude();
+                longitude = mLastLocation.getLongitude();
+            }
+        } else {
+            Log.e(LOG_TAG, Manifest.permission.ACCESS_FINE_LOCATION + " Permission NOT granted");
+
         }
+
     }
 
     @Override
-    public void onPause() {
-        super.onPause();
-        if (checkCallingOrSelfPermission(Manifest.permission.ACCESS_FINE_LOCATION) == PackageManager.PERMISSION_GRANTED) {
-            locationManager.removeUpdates(locationListener);
-        }
+    public void onConnectionFailed(@NonNull ConnectionResult result) {
+        Log.e(LOG_TAG, "Google API connection Error: " + result.getErrorMessage());
+    }
+
+    @Override
+    public void onConnectionSuspended(int x) {
+
+    }
+
+
+
+    @Override
+    protected void onStop() {
+        mGoogleApiClient.disconnect();
+        super.onStop();
     }
 
     @Override
     public void onStart() {
+        mGoogleApiClient.connect();
         super.onStart();
        if (isNetworkAvailable()) {
-           ShiftController shiftController = new ShiftController(this);
+           ShiftController shiftController = new ShiftController();
+           //TODO: Update list of shift every few seconds. Add a preference to query refresh rate
            shiftController.execute("GET", "/shifts");
        } else {
             //If no network is available show the shifts from DB
@@ -194,7 +171,7 @@ public class ShiftListActivity extends AppCompatActivity {
 
            //cursor.moveToFirst();
            ArrayList<ShiftItem> shiftList = new ArrayList<>();
-           Shift shift = new Shift();
+           //Shift shift = new Shift();
            while (cursor.moveToNext()) {
                ShiftItem shiftItem = new ShiftItem(cursor.getString(0),cursor.getString(1),
                        cursor.getString(2),cursor.getString(3),cursor.getString(4),
@@ -202,7 +179,7 @@ public class ShiftListActivity extends AppCompatActivity {
                //Add shift to list that populates Recycle View
                shiftList.add(shiftItem);
                //Add shift to HasMap so it can be accessed from the Details View.
-               shift.addItem(shiftItem);
+               Shift.addItem(shiftItem);
            }
            cursor.close();
            db.close();
@@ -214,16 +191,13 @@ public class ShiftListActivity extends AppCompatActivity {
 
     }
 
+
+
     private boolean isNetworkAvailable() {
         ConnectivityManager connectivityManager
                 = (ConnectivityManager) getSystemService(Context.CONNECTIVITY_SERVICE);
         NetworkInfo activeNetworkInfo = connectivityManager.getActiveNetworkInfo();
         return activeNetworkInfo != null && activeNetworkInfo.isConnected();
-    }
-
-    private void showOfflineShiftsFromDB() {
-        //
-
     }
 
 
@@ -317,10 +291,7 @@ public class ShiftListActivity extends AppCompatActivity {
 
         private final String LOG_TAG = ShiftController.class.getSimpleName();
 
-        private Context mContext;
-
-        public ShiftController(Context mContext) {
-            this.mContext = mContext;
+        public ShiftController() {
         }
 
 
@@ -345,14 +316,14 @@ public class ShiftListActivity extends AppCompatActivity {
                 urlConnection.setRequestProperty("Content-Type", CONTENT_TYPE);
                 urlConnection.setRequestMethod(method);
 
-                Log.v(LOG_TAG, "POST Code " + urlConnection.getResponseCode() + " " + urlConnection.getResponseMessage() + " " + urlConnection.getErrorStream());
-                if (urlConnection.getResponseCode() == urlConnection.HTTP_OK) {
+                //Log.v(LOG_TAG, "POST Code " + urlConnection.getResponseCode() + " " + urlConnection.getResponseMessage() + " " + urlConnection.getErrorStream());
+                if (urlConnection.getResponseCode() == HttpURLConnection.HTTP_OK) {
 
 
                     // Read the input stream into a String
                     InputStream inputStream = urlConnection.getInputStream();
 
-                    StringBuffer buffer = new StringBuffer();
+                    StringBuilder buffer = new StringBuilder();
 
                     if (inputStream == null) {
                         // Nothing to do.
@@ -365,7 +336,7 @@ public class ShiftListActivity extends AppCompatActivity {
                         // Since it's JSON, adding a newline isn't necessary (it won't affect parsing)
                         // But it does make debugging easier if you print out the completed
                         // buffer for debugging.
-                        buffer.append(line + "\n");
+                        buffer.append(line).append("\n");
                     }
 
                     if (buffer.length() == 0) {
@@ -376,10 +347,10 @@ public class ShiftListActivity extends AppCompatActivity {
 
 
                 } else {
-                    Log.v(LOG_TAG, urlConnection.getResponseCode() + " " + urlConnection.getResponseMessage() + " " + urlConnection.getErrorStream());
+                    Log.d(LOG_TAG, urlConnection.getResponseCode() + " " + urlConnection.getResponseMessage() + " " + urlConnection.getErrorStream());
                 }
 
-                Log.v(LOG_TAG, "JSON String: " + jsonStr);
+                Log.d(LOG_TAG, "JSON String: " + jsonStr);
 
             } catch (IOException e) {
                 Log.e(LOG_TAG, "Error ", e);
@@ -445,17 +416,17 @@ public class ShiftListActivity extends AppCompatActivity {
                 setupRecyclerView((RecyclerView) recyclerView, shiftList);
 
                 //Adding the shifts so they can be found in ShiftDetailFragment
-                Shift shift = new Shift();
-                for (int i = 0; i < result.length; i++) {
-                    shift.addItem(result[i]);
-                    insertShiftInDB(result[i]);
+
+                for (ShiftItem aResult : result) {
+                    Shift.addItem(aResult);
+                    insertShiftInDB(aResult);
                 }
 
                 //updateShiftsDB(ShiftItem[] result);
 
             }
         }
-    }//End AsyncTast Class
+    }//End AsyncTask Class
 
     private void insertShiftInDB(ShiftItem shiftItem) {
         SQLiteDatabase db;
@@ -477,22 +448,6 @@ public class ShiftListActivity extends AppCompatActivity {
 
         db.close();
 
-        //Insert shifts
-       /* ContentValues values = new ContentValues();
-        values.put(DBContract.Shifts.COLUMN_NAME_COL1, desc); //Description
-        values.put(DBContract.Game.COLUMN_NAME_COL2, price); //endDate
-        values.put(DBContract.Game.COLUMN_NAME_COL3, endDate); //endDate
-        values.put(DBContract.Game.COLUMN_NAME_COL4, endCals); //endCalories
-        values.put(DBContract.Game.COLUMN_NAME_COL5, 0); //moderated
-        values.put(DBContract.Game.COLUMN_NAME_COL6, 0); //locked
-        values.put(DBContract.Game.COLUMN_NAME_COL7, endHP); //End points
-        values.put(DBContract.Game.COLUMN_NAME_COL8, 1); //Game started: 1 = Started
-
-        // Insert the new game, returning the primary key value of the new row
-        newRowId = db.insert(
-                DBContract.Game.TABLE_NAME,
-                null,
-                values);*/
 
     }
 
@@ -513,15 +468,16 @@ public class ShiftListActivity extends AppCompatActivity {
         //noinspection SimplifiableIfStatement
         if (id == R.id.menu_start_shift) {
             if (isNetworkAvailable()) {
+                //getMobileLocation();
                 StartStopShift startStopShift = new StartStopShift(recyclerView, this);
                 startStopShift.execute("POST", "/shift/start", Double.toString(latitude), Double.toString(longitude));
                 //Refresh the list of shift to show started shift in list
-                ShiftController shiftController = new ShiftController(this);
+                ShiftController shiftController = new ShiftController();
                 shiftController.execute("GET", "/shifts");
             } else {
                 Snackbar.make(recyclerView, getString(R.string.no_network_error), Snackbar.LENGTH_LONG)
                         .setAction("Action", null).show();
-                showOfflineShiftsFromDB();
+
 
             }
 
@@ -529,14 +485,25 @@ public class ShiftListActivity extends AppCompatActivity {
         }
 
         if (id == R.id.menu_end_shift) {
-            StartStopShift startStopShift = new StartStopShift(recyclerView, this);
-            startStopShift.execute("POST", "/shift/end", Double.toString(latitude), Double.toString(longitude));
-            //Refresh the list of shift to show details of ended shift
-            ShiftController shiftController = new ShiftController(this);
-            shiftController.execute("GET", "/shifts");
+            if (isNetworkAvailable()) {
+                //getMobileLocation();
+                StartStopShift startStopShift = new StartStopShift(recyclerView, this);
+                startStopShift.execute("POST", "/shift/end", Double.toString(latitude), Double.toString(longitude));
+                //Refresh the list of shift to show details of ended shift
+                ShiftController shiftController = new ShiftController();
+                shiftController.execute("GET", "/shifts");
+            } else {
+                Snackbar.make(recyclerView, getString(R.string.no_network_error), Snackbar.LENGTH_LONG)
+                        .setAction("Action", null).show();
+
+            }
+
             return true;
         }
 
         return super.onOptionsItemSelected(item);
     }
+
+
+
 }

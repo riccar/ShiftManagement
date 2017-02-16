@@ -1,8 +1,6 @@
 package com.deputy.shiftmanager;
 
-import java.util.ArrayList;
 import java.util.HashMap;
-import java.util.List;
 import java.util.Map;
 
 /**
@@ -14,15 +12,15 @@ public class Shift {
     /**
      * An array of Shift items.
      */
-    public static final List<ShiftItem> ITEMS = new ArrayList<ShiftItem>();
+    //private static final List<ShiftItem> ITEMS = new ArrayList<>();
 
     /**
      * A map of shift items, by ID.
      */
-    public static final Map<String, ShiftItem> ITEM_MAP = new HashMap<String, ShiftItem>();
+    public static final Map<String, ShiftItem> ITEM_MAP = new HashMap<>();
 
     public static void addItem(ShiftItem item) {
-        ITEMS.add(item);
+        //ITEMS.add(item);
         ITEM_MAP.put(item.id, item);
     }
 

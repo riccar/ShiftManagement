@@ -1,20 +1,16 @@
 package com.deputy.shiftmanager;
 
 import android.provider.BaseColumns;
-import android.telephony.TelephonyManager;
 
-/**
- * Created by Ricardo on 06/02/17.
- */
-public class DBContract {
+class DBContract {
 
 
     public static final  int    DATABASE_VERSION    = 1;
     public static final String DATABASE_NAME       = "ShiftManager.db";
     private static final String TEXT_TYPE           = " TEXT";
-    private static final String INT_TYPE            = " INTEGER";
-    private static final String REAL_TYPE           = " REAL";
-    private static final String NUMERIC_TYPE        = " NUMERIC";
+    //private static final String INT_TYPE            = " INTEGER";
+    //private static final String REAL_TYPE           = " REAL";
+    //private static final String NUMERIC_TYPE        = " NUMERIC";
     private static final String COMMA_SEP           = ",";
 
 
@@ -47,8 +43,6 @@ public class DBContract {
                 COLUMN_NAME_COL7 + TEXT_TYPE + " )";
 
         public static final String DELETE_TABLE = "DROP TABLE IF EXISTS " + TABLE_NAME;
-
-
 
     }
 

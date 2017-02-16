@@ -1,19 +1,11 @@
 package com.deputy.shiftmanager;
 
-import android.Manifest;
-import android.app.Activity;
 import android.content.Context;
-import android.content.pm.PackageManager;
-import android.location.Location;
-import android.location.LocationManager;
-import android.net.Uri;
 import android.os.AsyncTask;
 import android.support.design.widget.Snackbar;
-import android.support.v7.widget.RecyclerView;
 import android.util.Log;
 import android.view.View;
 
-import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 
@@ -26,11 +18,7 @@ import java.io.OutputStream;
 import java.io.OutputStreamWriter;
 import java.net.URL;
 import java.text.DateFormat;
-import java.text.SimpleDateFormat;
-import java.util.Arrays;
-import java.util.Calendar;
 import java.util.Date;
-import java.util.List;
 import java.util.TimeZone;
 
 import javax.net.ssl.HttpsURLConnection;
@@ -40,21 +28,18 @@ import javax.net.ssl.HttpsURLConnection;
  * Handle the POST start and stop shifts using AsyncTask
  */
 
-public class StartStopShift extends AsyncTask<String, Void, Boolean> {
+class StartStopShift extends AsyncTask<String, Void, Boolean> {
 
     // These two need to be declared outside the try/catch
     // so that they can be closed in the finally block.
-    HttpsURLConnection urlConnection = null;
-    BufferedReader reader = null;
-
-    // Will contain the raw JSON response as a string.
-    String jsonStr = null;
+    private HttpsURLConnection urlConnection = null;
+    private BufferedReader reader = null;
 
     private final String LOG_TAG = com.deputy.shiftmanager.ShiftListActivity.ShiftController.class.getSimpleName();
     //call: /shift/start or /shift/stop
     private String call;
-    private View mContextView;
-    private Context mContext;
+    private final View mContextView;
+    private final Context mContext;
 
     public StartStopShift(View mContext, Context context) {
         this.mContextView = mContext;
@@ -64,6 +49,7 @@ public class StartStopShift extends AsyncTask<String, Void, Boolean> {
     @Override
     protected Boolean doInBackground(String... params) {
 
+        String jsonStr = null;
         try {
             final String DEPUTY_API_URL = "https://apjoqdqpi3.execute-api.us-west-2.amazonaws.com/dmc";
             final String CHARSET = "UTF-8";
@@ -89,7 +75,8 @@ public class StartStopShift extends AsyncTask<String, Void, Boolean> {
             String longitude = params[3];
 
             TimeZone tz = TimeZone.getTimeZone("UTC");
-            DateFormat df = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss");
+            //DateFormat df =new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss");
+            DateFormat df = DateFormat.getDateTimeInstance();// new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss");
             df.setTimeZone(tz);
             String nowAsISO = df.format(new Date());
 
@@ -117,7 +104,7 @@ public class StartStopShift extends AsyncTask<String, Void, Boolean> {
             // Read the input stream into a String
             InputStream inputStream = urlConnection.getInputStream();
 
-            StringBuffer buffer = new StringBuffer();
+            StringBuilder buffer = new StringBuilder();
 
             if (inputStream == null) {
                 // Nothing to do.
@@ -130,7 +117,7 @@ public class StartStopShift extends AsyncTask<String, Void, Boolean> {
                 // Since it's JSON, adding a newline isn't necessary (it won't affect parsing)
                 // But it does make debugging easier if you print out the completed
                 // buffer for debugging.
-                buffer.append(line + "\n");
+                buffer.append(line).append("\n");
             }
 
             if (buffer.length() == 0) {
@@ -161,7 +148,7 @@ public class StartStopShift extends AsyncTask<String, Void, Boolean> {
 
         //Return true if the response doesn't include the word "Nope" which means the
         //the shift was created successfully
-        return jsonStr.indexOf("Nope") < 0;
+        return !jsonStr.contains("Nope");
 
 
 
@@ -172,13 +159,13 @@ public class StartStopShift extends AsyncTask<String, Void, Boolean> {
         super.onPostExecute(result);
         String message;
         if (result) {
-            if (call == "/shift/start") {
+            if (call.equals("/shift/start")) {
                 message = mContext.getString(R.string.shift_start_success);
             } else {
                 message = mContext.getString(R.string.shift_stop_success);
             }
         } else {
-            if (call == "/shift/start") {
+            if (call.equals("/shift/start") ) {
                 message = mContext.getString(R.string.shift_start_error);
             } else {
                 message = mContext.getString(R.string.shift_stop_error);
