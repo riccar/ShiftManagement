@@ -1,8 +1,8 @@
-package com.deputy.shiftmanager;
+package com.deputy.shiftmanager.shift.data;
 
 import android.provider.BaseColumns;
 
-class DBContract {
+public class DBContract {
 
 
     public static final  int    DATABASE_VERSION    = 1;

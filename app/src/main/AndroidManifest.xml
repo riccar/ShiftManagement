@@ -17,7 +17,7 @@
         android:supportsRtl="true"
         android:theme="@style/AppTheme">
         <activity
-            android:name=".ShiftListActivity"
+            android:name=".shift.ShiftListActivity"
             android:label="@string/app_name"
             android:theme="@style/AppTheme.NoActionBar">
             <intent-filter>
@@ -27,13 +27,13 @@
             </intent-filter>
         </activity>
         <activity
-            android:name=".ShiftDetailActivity"
+            android:name=".shift.ShiftDetailActivity"
             android:label="@string/title_shift_detail"
-            android:parentActivityName=".ShiftListActivity"
+            android:parentActivityName=".shift.ShiftListActivity"
             android:theme="@style/AppTheme.NoActionBar">
             <meta-data
                 android:name="android.support.PARENT_ACTIVITY"
-                android:value="com.deputy.shiftmanager.ShiftListActivity" />
+                android:value="com.deputy.shiftmanager.shift.ShiftListActivity" />
         </activity>
         <!--
  ATTENTION: This was auto-generated to add Google Play services to your project for

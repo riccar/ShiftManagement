@@ -1,11 +1,10 @@
-package com.deputy.shiftmanager;
+package com.deputy.shiftmanager.shift.model;
 
 import java.util.HashMap;
 import java.util.Map;
 
 /**
- * Helper class for providing sample content for user interfaces created by
- * Android template wizards.
+ * Shift class to model the shifts.
  */
 public class Shift {
 
@@ -25,7 +24,7 @@ public class Shift {
     }
 
     /**
-     * A ShiftItem representing a one shift.
+     * A ShiftItem representing one shift.
      */
     public static class ShiftItem {
         public final String id;

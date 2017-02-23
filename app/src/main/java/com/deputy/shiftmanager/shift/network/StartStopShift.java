@@ -1,10 +1,13 @@
-package com.deputy.shiftmanager;
+package com.deputy.shiftmanager.shift.network;
 
 import android.content.Context;
 import android.os.AsyncTask;
 import android.support.design.widget.Snackbar;
 import android.util.Log;
 import android.view.View;
+
+import com.deputy.shiftmanager.R;
+import com.deputy.shiftmanager.shift.ShiftListActivity;
 
 import org.json.JSONException;
 import org.json.JSONObject;
@@ -28,22 +31,22 @@ import javax.net.ssl.HttpsURLConnection;
  * Handle the POST start and stop shifts using AsyncTask
  */
 
-class StartStopShift extends AsyncTask<String, Void, Boolean> {
+public class StartStopShift extends AsyncTask<String, Void, Boolean> {
 
     // These two need to be declared outside the try/catch
     // so that they can be closed in the finally block.
     private HttpsURLConnection urlConnection = null;
     private BufferedReader reader = null;
 
-    private final String LOG_TAG = com.deputy.shiftmanager.ShiftListActivity.ShiftController.class.getSimpleName();
+    private final String LOG_TAG = StartStopShift.class.getSimpleName();
     //call: /shift/start or /shift/stop
     private String call;
     private final View mContextView;
     private final Context mContext;
 
-    public StartStopShift(View mContext, Context context) {
-        this.mContextView = mContext;
-        this.mContext = context;
+    public StartStopShift(View view, Context context) {
+        mContextView = view;
+        mContext = context;
     }
 
     @Override

@@ -14,7 +14,7 @@
     android:layout_height="wrap_content"
     android:padding="16dp"
     android:textIsSelectable="true"
-    tools:context="com.deputy.shiftmanager.ShiftDetailFragment" />
+    tools:context="com.deputy.shiftmanager.shift.ShiftDetailFragment" />
 
 
     <fragment xmlns:android="http://schemas.android.com/apk/res/android"
