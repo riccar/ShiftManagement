@@ -7,7 +7,6 @@ import android.util.Log;
 import android.view.View;
 
 import com.deputy.shiftmanager.R;
-import com.deputy.shiftmanager.shift.ShiftListActivity;
 
 import org.json.JSONException;
 import org.json.JSONObject;
@@ -94,7 +93,7 @@ public class StartStopShift extends AsyncTask<String, Void, Boolean> {
             } catch (JSONException e) {
                 Log.v(LOG_TAG, e.getMessage());
             }
-
+            Log.v(LOG_TAG, JSONQuery.toString());
             OutputStream os = urlConnection.getOutputStream();
             BufferedWriter writer = new BufferedWriter(
                     new OutputStreamWriter(os, "UTF-8"));
@@ -149,6 +148,7 @@ public class StartStopShift extends AsyncTask<String, Void, Boolean> {
             }
         }
 
+        //Due the lack of a proper error coding implementing by the API
         //Return true if the response doesn't include the word "Nope" which means the
         //the shift was created successfully
         return !jsonStr.contains("Nope");

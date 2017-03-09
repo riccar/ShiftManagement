@@ -1,6 +1,5 @@
 package com.deputy.shiftmanager.shift.adapter;
 
-import android.app.Activity;
 import android.content.Context;
 import android.content.Intent;
 import android.os.Bundle;
@@ -10,15 +9,12 @@ import android.support.v7.widget.RecyclerView;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
-import android.widget.ImageView;
 import android.widget.TextView;
 import com.deputy.shiftmanager.R;
 import com.deputy.shiftmanager.shift.ShiftDetailActivity;
 import com.deputy.shiftmanager.shift.ShiftDetailFragment;
 import com.deputy.shiftmanager.shift.ShiftListActivity;
 import com.deputy.shiftmanager.shift.model.Shift;
-
-import android.support.v7.widget.RecyclerView.Adapter;
 
 import java.util.List;
 
@@ -30,11 +26,11 @@ public class RecyclerViewAdapter
         extends RecyclerView.Adapter<RecyclerViewAdapter.ViewHolder> {
 
     private final List<Shift.ShiftItem> mValues;
-    private FragmentActivity mContext;
+    private final Context mContext;
 
-    public RecyclerViewAdapter(List<Shift.ShiftItem> items, Activity activity) {
+    public RecyclerViewAdapter(List<Shift.ShiftItem> items, Context appContext) {
         mValues = items;
-        mContext = (FragmentActivity) activity;
+        mContext = appContext;
     }
 
     @Override
@@ -57,11 +53,13 @@ public class RecyclerViewAdapter
                 //If device has two panes replace shift_detail_container
                 if (ShiftListActivity.TWO_PANES) {
                     Bundle arguments = new Bundle();
-                    arguments.putString(ShiftDetailFragment.ARG_ITEM_ID, holder.mItem.id);
+                    arguments.putInt(ShiftDetailFragment.ARG_ITEM_ID, Integer.valueOf(holder.mItem.id));
+                    //arguments.putInt(ShiftDetailFragment.ARG_ITEM_ID, holder.mItem.id);
+                    //arguments.putBundle("shifts", mValues);
                     ShiftDetailFragment fragment = new ShiftDetailFragment();
                     fragment.setArguments(arguments);
 
-                    FragmentManager fragmentManager =  mContext.getSupportFragmentManager();
+                    FragmentManager fragmentManager =  ((FragmentActivity) mContext).getSupportFragmentManager();
                     fragmentManager.beginTransaction()
                             .replace(R.id.shift_detail_container, fragment)
                             .commit();

@@ -1,13 +1,10 @@
 package com.deputy.shiftmanager.shift.network;
 
 import android.app.Activity;
-import android.content.Context;
 import android.database.sqlite.SQLiteDatabase;
 import android.os.AsyncTask;
-import android.support.v4.app.FragmentActivity;
 import android.support.v7.widget.RecyclerView;
 import android.util.Log;
-import android.view.View;
 
 import com.deputy.shiftmanager.R;
 import com.deputy.shiftmanager.shift.adapter.RecyclerViewAdapter;
@@ -33,20 +30,20 @@ import javax.net.ssl.HttpsURLConnection;
  * Created by Ricardo on 22/02/2017.
  */
 
-public class GetShifts extends AsyncTask<String, Void, Shift.ShiftItem[]> {
+class GetShifts extends AsyncTask<String, Void, Shift.ShiftItem[]> {
 
     // These two need to be declared outside the try/catch
     // so that they can be closed in the finally block.
-    HttpsURLConnection urlConnection = null;
-    BufferedReader reader = null;
+    private HttpsURLConnection urlConnection = null;
+    private BufferedReader reader = null;
     // Will contain the raw JSON response as a string.
-    String jsonStr = null;
+    private String jsonStr = null;
 
     private final String LOG_TAG = GetShifts.class.getSimpleName();
 
     private final Activity mContext;
 
-    public GetShifts(Activity context) {
+    private GetShifts(Activity context) {
         mContext = context;
     }
 
@@ -109,7 +106,7 @@ public class GetShifts extends AsyncTask<String, Void, Shift.ShiftItem[]> {
             Log.d(LOG_TAG, "JSON String: " + jsonStr);
 
         } catch (IOException e) {
-            Log.e(LOG_TAG, "Error ", e);
+            Log.e(LOG_TAG, "Error: " + e.getMessage());
             // If the code didn't successfully get the data, there's no point in attempting
             // to parse it.
             return null;
@@ -182,7 +179,8 @@ public class GetShifts extends AsyncTask<String, Void, Shift.ShiftItem[]> {
 
             for (Shift.ShiftItem aResult : result) {
                 Shift.addItem(aResult);
-                dbHelper.insertShiftInDB(db, aResult);
+                //Below function was refactored, so it's commented since this class is not in use
+                //dbHelper.insertShiftInDB(db, aResult);
             }
 
             //updateShiftsDB(ShiftItem[] result);

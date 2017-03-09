@@ -54,7 +54,9 @@ public class ShiftDetailFragment extends Fragment implements OnMapReadyCallback 
         if (getArguments().containsKey(ARG_ITEM_ID)) {
             // Load the content specified by the fragment
 
-            mItem = Shift.ITEM_MAP.get(getArguments().getString(ARG_ITEM_ID));
+            //ITEM_MAP is no longer used after implementing networking with retrofit
+            //mItem = Shift.ITEM_MAP.get(getArguments().getString(ARG_ITEM_ID));
+            mItem = Shift.SHIFT_LIST.get(Integer.valueOf(getArguments().getString(ARG_ITEM_ID)) - 1);
 
             Activity activity = this.getActivity();
 
@@ -92,11 +94,11 @@ public class ShiftDetailFragment extends Fragment implements OnMapReadyCallback 
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container,
                              Bundle savedInstanceState) {
-        View rootView = inflater.inflate(R.layout.shift_detail, container, false);
+        View rootView = inflater.inflate(R.layout.fragment_shift_detail, container, false);
 
         // Show the content as text in a TextView.
         if (mItem != null) {
-            TextView shiftDetail = ((TextView) rootView.findViewById(R.id.shift_detail));//.setText(mItem.id + lineBreak + mItem.start + lineBreak + mItem.end);
+            TextView shiftDetail = ((TextView) rootView.findViewById(R.id.fragment_shift_detail));//.setText(mItem.id + lineBreak + mItem.start + lineBreak + mItem.end);
 
             shiftDetail.setText("ID: " + mItem.id  + lineBreak);
             shiftDetail.append("Start Date: " + mItem.start + lineBreak);

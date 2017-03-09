@@ -1,5 +1,6 @@
 package com.deputy.shiftmanager.shift.model;
 
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -9,18 +10,25 @@ import java.util.Map;
 public class Shift {
 
     /**
-     * An array of Shift items.
-     */
-    //private static final List<ShiftItem> ITEMS = new ArrayList<>();
-
-    /**
      * A map of shift items, by ID.
      */
     public static final Map<String, ShiftItem> ITEM_MAP = new HashMap<>();
 
     public static void addItem(ShiftItem item) {
-        //ITEMS.add(item);
         ITEM_MAP.put(item.id, item);
+    }
+
+    public static ArrayList<ShiftItem> SHIFT_LIST = new ArrayList<>();
+
+// --Commented out by Inspection START (10/03/2017 8:04 AM):
+//    public ArrayList<ShiftItem> getResults() {
+//        return SHIFT_LIST;
+//    }
+// --Commented out by Inspection STOP (10/03/2017 8:04 AM)
+
+    public static void addShift(ShiftItem item) {
+
+        SHIFT_LIST.add(Integer.valueOf(item.id) -1, item);
     }
 
     /**
