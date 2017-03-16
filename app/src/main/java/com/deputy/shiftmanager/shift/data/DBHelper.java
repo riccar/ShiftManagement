@@ -12,7 +12,7 @@ import java.util.List;
 
 public class DBHelper extends SQLiteOpenHelper {
 
-    final Context mContext;
+    private final Context mContext;
 
     public DBHelper(Context context) {
         super(context, DBContract.DATABASE_NAME, null, DBContract.DATABASE_VERSION);
@@ -39,7 +39,9 @@ public class DBHelper extends SQLiteOpenHelper {
         DBHelper dbHelper = new DBHelper(mContext);
         db = dbHelper.getWritableDatabase();
 
-        String query = "insert or replace into Shifts (" + DBContract.Shifts._ID + "," +
+        //db.execSQL("delete from " + DBContract.Shifts.TABLE_NAME);
+        //db.delete(DBContract.Shifts.TABLE_NAME,null,null);
+        String query = "insert or replace into " + DBContract.Shifts.TABLE_NAME + " (" + DBContract.Shifts._ID + "," +
             DBContract.Shifts.COLUMN_NAME_COL1 + "," + DBContract.Shifts.COLUMN_NAME_COL2 + "," +
             DBContract.Shifts.COLUMN_NAME_COL3 + "," + DBContract.Shifts.COLUMN_NAME_COL4 + "," +
             DBContract.Shifts.COLUMN_NAME_COL5 + "," + DBContract.Shifts.COLUMN_NAME_COL6 + "," +
@@ -47,7 +49,7 @@ public class DBHelper extends SQLiteOpenHelper {
 
         for (Shift.ShiftItem shiftItem : shifts) {
 
-            db.execSQL(query, new String[]{shiftItem.id, shiftItem.start,shiftItem.end,
+            db.execSQL(query, new String[]{String.valueOf(shiftItem.id), shiftItem.start,shiftItem.end,
                     shiftItem.startLatitude, shiftItem.startLongitude, shiftItem.endLatitude,
                     shiftItem.endLongitude, shiftItem.image});
         }

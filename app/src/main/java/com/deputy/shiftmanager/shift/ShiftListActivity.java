@@ -8,15 +8,19 @@ import android.net.ConnectivityManager;
 import android.net.NetworkInfo;
 import android.os.Bundle;
 import android.support.annotation.NonNull;
+import android.support.design.widget.CoordinatorLayout;
+import android.support.v4.app.ActivityCompat;
+import android.support.v4.content.ContextCompat;
+import android.support.v4.widget.SwipeRefreshLayout;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.RecyclerView;
 import android.support.v7.widget.Toolbar;
 import android.support.design.widget.FloatingActionButton;
 import android.support.design.widget.Snackbar;
 import android.util.Log;
-import android.view.Menu;
-import android.view.MenuItem;
 import android.view.View;
+import android.view.animation.Animation;
+import android.view.animation.AnimationUtils;
 
 import com.deputy.shiftmanager.R;
 import com.deputy.shiftmanager.shift.adapter.RecyclerViewAdapter;
@@ -34,9 +38,9 @@ import org.json.JSONObject;
 import java.text.DateFormat;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.Date;
 import java.util.List;
-import java.util.Objects;
 import java.util.TimeZone;
 
 import okhttp3.MediaType;
@@ -44,6 +48,8 @@ import okhttp3.RequestBody;
 import retrofit2.Call;
 import retrofit2.Callback;
 import retrofit2.Response;
+
+import static com.deputy.shiftmanager.shift.model.Shift.SHIFT_LIST;
 
 
 /**
@@ -55,20 +61,25 @@ import retrofit2.Response;
  * item details side-by-side using two vertical panes.
  */
 public class ShiftListActivity extends AppCompatActivity
-        implements GoogleApiClient.ConnectionCallbacks, GoogleApiClient.OnConnectionFailedListener {
+        implements GoogleApiClient.ConnectionCallbacks, GoogleApiClient.OnConnectionFailedListener,
+        View.OnClickListener {
 
+    private final String LOG_TAG = ShiftListActivity.class.getSimpleName();
     /**
      * Whether or not the activity is in two-pane mode, i.e. running on a tablet
      * device.
      */
     public static boolean TWO_PANES;
-
-    private View recyclerView;
+    private CoordinatorLayout coordLayout = null;
     private double longitude = 0.00000;
     private double latitude = 0.00000;
-    private final String LOG_TAG = ShiftListActivity.class.getSimpleName();
-    private GoogleApiClient mGoogleApiClient;// = new GoogleApiClient.Builder(this);
-    private RecyclerView recyclerViewShift = null;// = (RecyclerView) findViewById(R.id.shift_list);
+    private GoogleApiClient mGoogleApiClient;
+    private RecyclerView recyclerViewShift = null;
+    //define fab buttons and animations and boolean value to determine if fab icon is open
+    private FloatingActionButton mFab, mFabStart, mFabStop;
+    private Boolean isFabOpen = false;
+    private Animation fab_open,fab_close,rotate_forward,rotate_backward;
+    private SwipeRefreshLayout refreshLayout;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -79,18 +90,21 @@ public class ShiftListActivity extends AppCompatActivity
         setSupportActionBar(toolbar);
         toolbar.setTitle(getTitle());
 
-        FloatingActionButton fab = (FloatingActionButton) findViewById(R.id.fab);
-        fab.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View view) {
-                Snackbar.make(view, "Replace with your own action", Snackbar.LENGTH_LONG)
-                        .setAction("Action", null).show();
-            }
-        });
+        //Load fab buttons
+        mFab = (FloatingActionButton) findViewById(R.id.fab);
+        mFabStart = (FloatingActionButton)findViewById(R.id.fabStart);
+        mFabStop = (FloatingActionButton)findViewById(R.id.fabStop);
+        //Load animations defined in res/anim folder
+        fab_open = AnimationUtils.loadAnimation(getApplicationContext(), R.anim.fab_open);
+        fab_close = AnimationUtils.loadAnimation(getApplicationContext(),R.anim.fab_close);
+        rotate_forward = AnimationUtils.loadAnimation(getApplicationContext(),R.anim.rotate_forward);
+        rotate_backward = AnimationUtils.loadAnimation(getApplicationContext(),R.anim.rotate_backward);
+        //Define OnClick listeners for fab buttons
+        mFab.setOnClickListener(this);
+        mFabStart.setOnClickListener(this);
+        mFabStop.setOnClickListener(this);
 
-        recyclerView = findViewById(R.id.shift_list);
-        assert recyclerView != null;
-        //setupRecyclerView((RecyclerView) recyclerView);
+        coordLayout = (CoordinatorLayout) findViewById(R.id.coordinatorLayout);
 
         if (findViewById(R.id.shift_detail_container) != null) {
             // The detail container view will be present only in the
@@ -113,6 +127,7 @@ public class ShiftListActivity extends AppCompatActivity
         //recyclerViewShift.setLayoutManager(new LinearLayoutManager(this));
         recyclerViewShift = (RecyclerView) findViewById(R.id.shift_list);
 
+        //TODO: move getShift call to a headless fragment to avoid execution in UI thread
         if (isNetworkAvailable()) {
 
             getShifts();
@@ -128,59 +143,115 @@ public class ShiftListActivity extends AppCompatActivity
             //next line commented for retrofit
             //setupRecyclerView((RecyclerView) recyclerView, shiftList);
 
-            Snackbar.make(recyclerView, getString(R.string.no_network_error), Snackbar.LENGTH_LONG)
+            Snackbar.make(coordLayout, getString(R.string.no_network_error), Snackbar.LENGTH_LONG)
                     .setAction("Action", null).show();
         }
 
-    }
+        refreshLayout = (SwipeRefreshLayout)findViewById(R.id.swipeLayout);
 
-    //Get Shift. Executes an API call to get all the shifts and populate adapter
-    private void getShifts() {
-        ApiInterface apiInterface =
-                ApiClient.getClient().create(ApiInterface.class);
+        //TODO: Fix issue at onRefresh when the layout change to dual pane for tablets
+        refreshLayout.setOnRefreshListener(new SwipeRefreshLayout.OnRefreshListener() {
 
-        Call<ArrayList<Shift.ShiftItem>> call = apiInterface.getShifts();
-
-        call.enqueue(new Callback<ArrayList<Shift.ShiftItem>>() {
             @Override
-            public void onResponse(Call<ArrayList<Shift.ShiftItem>> call,
-                                   Response<ArrayList<Shift.ShiftItem>> response) {
+            public void onRefresh() {
+                // call your Refresh method here
+                //TODO: Move into getShift the network validation and the shift returned from db
+                if (isNetworkAvailable()) {
 
-                if (response.body().size() > 0) {
-                    ArrayList<Shift.ShiftItem> shifts = response.body();
-                    //Assigning the list of shift to the static Shift attribute so it can be
-                    //accessed from DetailFragment
-                    Shift.SHIFT_LIST = shifts;
-                    recyclerViewShift.setAdapter(new RecyclerViewAdapter(shifts, getApplicationContext()));
-
-                    //Insert new shift in DB and update current shifts
-                    DBHelper dbHelper = new DBHelper(getApplicationContext());
-                    dbHelper.insertShiftInDB(shifts);
+                    getShifts();
 
                 } else {
-                    //TODO: Identify response for empty list and return error message
+                    //Show shifts from DB when no network connection is available
+
+                    List<Shift.ShiftItem> shiftList;// = new ArrayList<>();
+                    DBHelper dbHelper = new DBHelper(getApplicationContext());
+                    shiftList = dbHelper.getShiftsFromDB();
+
+                    recyclerViewShift.setAdapter(new RecyclerViewAdapter(shiftList, getApplicationContext() ));
+                    //next line commented for retrofit
+                    //setupRecyclerView((RecyclerView) recyclerView, shiftList);
+
+                    Snackbar.make(coordLayout, getString(R.string.no_network_error), Snackbar.LENGTH_LONG)
+                            .setAction("Action", null).show();
                 }
-            }
-            @Override
-            public void onFailure(Call<ArrayList<Shift.ShiftItem>> call, Throwable t) {
-                // Log error here since request failed
-                Log.e(LOG_TAG, t.toString());
+
+                refreshLayout.setRefreshing(false);
             }
         });
     }
 
     @Override
+    public void onClick(View v) {
+        int id = v.getId();
+        switch (id){
+            case R.id.fab:
+                animateFAB();
+                break;
+            case R.id.fabStart:
+                if (isNetworkAvailable()) {
+                    updateShift("start");
+                } else {
+                    Snackbar.make(coordLayout, getString(R.string.no_network_error), Snackbar.LENGTH_LONG)
+                            .setAction("Action", null).show();
+                }
+                break;
+            case R.id.fabStop:
+                if (isNetworkAvailable()) {
+                    updateShift("stop");
+                } else {
+                    Snackbar.make(coordLayout, getString(R.string.no_network_error), Snackbar.LENGTH_LONG)
+                            .setAction("Action", null).show();
+                }
+                break;
+        }
+    }
+
+    //Function to start the animation of the buttons when the fab button is open or not.
+    private void animateFAB(){
+
+        if(isFabOpen){
+            mFab.startAnimation(rotate_backward);
+            mFabStart.startAnimation(fab_close);
+            mFabStop.startAnimation(fab_close);
+            mFabStart.setClickable(false);
+            mFabStop.setClickable(false);
+            isFabOpen = false;
+        } else {
+            mFab.startAnimation(rotate_forward);
+            mFabStart.startAnimation(fab_open);
+            mFabStop.startAnimation(fab_open);
+            mFabStart.setClickable(true);
+            mFabStop.setClickable(true);
+            isFabOpen = true;
+            Log.d("Raj","open");
+
+        }
+    }
+
+
+    @Override
     public void onConnected(Bundle connectionHint) {
-        if (checkCallingOrSelfPermission(Manifest.permission.ACCESS_FINE_LOCATION) !=
+        Log.i(LOG_TAG, "Connected to Google API");
+        if (ContextCompat.checkSelfPermission(this, Manifest.permission.ACCESS_COARSE_LOCATION) ==
                 PackageManager.PERMISSION_GRANTED) {
             Location mLastLocation = LocationServices.FusedLocationApi.getLastLocation(
                     mGoogleApiClient);
             if (mLastLocation != null) {
                 latitude = mLastLocation.getLatitude();
                 longitude = mLastLocation.getLongitude();
+                Log.i(LOG_TAG, "Lat " + latitude + " Long " + longitude);
+            } else {
+                Log.i(LOG_TAG, "Last location is null ");
+
             }
         } else {
-            Log.e(LOG_TAG, Manifest.permission.ACCESS_FINE_LOCATION + " Permission NOT granted");
+
+            //Request permission if not granted. Required since Android API 23
+            int REQUEST_CODE_ASK_PERMISSIONS = 123;
+            ActivityCompat.requestPermissions( this,
+                    new String[] {  android.Manifest.permission.ACCESS_COARSE_LOCATION  },
+                    REQUEST_CODE_ASK_PERMISSIONS);
+            Log.e(LOG_TAG, Manifest.permission.ACCESS_COARSE_LOCATION + " Permission NOT granted");
 
         }
 
@@ -217,57 +288,10 @@ public class ShiftListActivity extends AppCompatActivity
     }
 
 
-    @Override
-    public boolean onCreateOptionsMenu(Menu menu) {
-        // Inflate the menu; this adds items to the action bar if it is present.
-        getMenuInflater().inflate(R.menu.menu_main, menu);
-        return true;
-    }
-
-    @Override
-    public boolean onOptionsItemSelected(MenuItem item) {
-        // Handle action bar item clicks here. The action bar will
-        // automatically handle clicks on the Home/Up button, so long
-        // as you specify a parent activity in AndroidManifest.xml.
-        int id = item.getItemId();
-
-        //noinspection SimplifiableIfStatement
-        if (id == R.id.menu_start_shift) {
-            if (isNetworkAvailable()) {
-
-                updateShift("start");
-
-            } else {
-                Snackbar.make(recyclerView, getString(R.string.no_network_error), Snackbar.LENGTH_LONG)
-                        .setAction("Action", null).show();
-            }
-            return true;
-        }
-
-        if (id == R.id.menu_end_shift) {
-            if (isNetworkAvailable()) {
-
-                updateShift("stop");
-
-            } else {
-                Snackbar.make(recyclerView, getString(R.string.no_network_error), Snackbar.LENGTH_LONG)
-                        .setAction("Action", null).show();
-
-            }
-
-            return true;
-        }
-
-        return super.onOptionsItemSelected(item);
-    }
-
-
     private void updateShift(String apiCall) {
-
-        TimeZone tz = TimeZone.getTimeZone("UTC");
+        //Getting today's date and time
         DateFormat df =new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss");
-        //DateFormat df = DateFormat.getDateTimeInstance();// new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss");
-        df.setTimeZone(tz);
+        df.setTimeZone(TimeZone.getDefault());
         String nowAsISO = df.format(new Date());
 
         JSONObject JSONQuery = new JSONObject();
@@ -295,10 +319,10 @@ public class ShiftListActivity extends AppCompatActivity
                 public void onResponse(Call<String> call, Response<String> response) {
                     //Due to the lack of a good response coding, use keyword from response message
                     if (response.body().indexOf("good") > 0) {
-                        Snackbar.make(recyclerView, getString(R.string.shift_start_success),
+                        Snackbar.make(coordLayout, getString(R.string.shift_start_success),
                                 Snackbar.LENGTH_LONG).setAction("Action", null).show();
                     } else {
-                        Snackbar.make(recyclerView, getString(R.string.shift_start_error),
+                        Snackbar.make(coordLayout, getString(R.string.shift_start_error),
                                 Snackbar.LENGTH_LONG).setAction("Action", null).show();
                     }
                 }
@@ -316,10 +340,10 @@ public class ShiftListActivity extends AppCompatActivity
                 public void onResponse(Call<String> call, Response<String> response) {
                     //Due to the lack of a good response coding, use keyword from response message
                     if (response.body().indexOf("good") > 0) {
-                        Snackbar.make(recyclerView, getString(R.string.shift_stop_success),
+                        Snackbar.make(coordLayout, getString(R.string.shift_stop_success),
                                 Snackbar.LENGTH_LONG).setAction("Action", null).show();
                     } else {
-                        Snackbar.make(recyclerView, getString(R.string.shift_stop_error),
+                        Snackbar.make(coordLayout, getString(R.string.shift_stop_error),
                                 Snackbar.LENGTH_LONG).setAction("Action", null).show();
                     }
                 }
@@ -330,5 +354,40 @@ public class ShiftListActivity extends AppCompatActivity
                 }
             });
         }
+    }
+
+    //Get Shift. Executes an API call to get all the shifts and populate adapter
+    private void getShifts() {
+        ApiInterface apiInterface =
+                ApiClient.getClient().create(ApiInterface.class);
+
+        Call<ArrayList<Shift.ShiftItem>> call = apiInterface.getShifts();
+
+        call.enqueue(new Callback<ArrayList<Shift.ShiftItem>>() {
+            @Override
+            public void onResponse(Call<ArrayList<Shift.ShiftItem>> call,
+                                   Response<ArrayList<Shift.ShiftItem>> response) {
+
+                if (response.body().size() > 0) {
+                    ArrayList<Shift.ShiftItem> shifts = response.body();
+                    //Assigning the list of shift to the static Shift attribute so it can be
+                    //accessed from DetailFragment
+                    Collections.sort(shifts);
+                    SHIFT_LIST = shifts;
+                    recyclerViewShift.setAdapter(new RecyclerViewAdapter(shifts, getApplicationContext()));
+                    //Insert new shift in DB and update current shifts
+                    DBHelper dbHelper = new DBHelper(getApplicationContext());
+                    dbHelper.insertShiftInDB(shifts);
+
+                } else {
+                    //TODO: Identify response for empty list and return error message
+                }
+            }
+            @Override
+            public void onFailure(Call<ArrayList<Shift.ShiftItem>> call, Throwable t) {
+                // Log error here since request failed
+                Log.e(LOG_TAG, t.toString());
+            }
+        });
     }
 }

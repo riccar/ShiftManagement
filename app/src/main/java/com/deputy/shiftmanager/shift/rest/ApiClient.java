@@ -21,7 +21,7 @@ public class ApiClient {
         HttpLoggingInterceptor logging = new HttpLoggingInterceptor();
 
         //setting log level
-        logging.setLevel(HttpLoggingInterceptor.Level.BODY);
+        logging.setLevel(HttpLoggingInterceptor.Level.BASIC);
 
         OkHttpClient.Builder httpClient = new OkHttpClient.Builder();
         // more interceptors can be added here

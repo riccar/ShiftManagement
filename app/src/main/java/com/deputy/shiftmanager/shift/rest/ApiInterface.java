@@ -15,15 +15,18 @@ public interface ApiInterface {
 
     String SHA1 = "d4e7430f1534a12df46cedd1ac369935436dbb94  -";
 
-    @Headers({"Content-Type: application/json", "Accept-Charset: UTF-8", "Authorization: Deputy " + SHA1})
+    @Headers({"Content-Type: application/json", "Accept-Charset: UTF-8",
+            "Authorization: Deputy " + SHA1})
     @GET("shifts")
     Call<ArrayList<Shift.ShiftItem>> getShifts();
 
-    @Headers({"Content-Type: application/json", "Accept-Charset: UTF-8", "Authorization: Deputy " + SHA1})
+    @Headers({"Content-Type: application/json", "Accept-Charset: UTF-8",
+            "Authorization: Deputy " + SHA1})
     @POST("shift/start")
     Call<String> startShift(@Body RequestBody body);
 
-    @Headers({"Content-Type: application/json", "Accept-Charset: UTF-8", "Authorization: Deputy " + SHA1})
+    @Headers({"Content-Type: application/json", "Accept-Charset: UTF-8",
+            "Authorization: Deputy " + SHA1})
     @POST("shift/end")
     Call<String> stopShift(@Body RequestBody body);
 

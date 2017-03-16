@@ -1,22 +1,15 @@
 package com.deputy.shiftmanager.shift.model;
 
+import android.support.annotation.NonNull;
+
 import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.Map;
 
 /**
  * Shift class to model the shifts.
  */
 public class Shift {
 
-    /**
-     * A map of shift items, by ID.
-     */
-    public static final Map<String, ShiftItem> ITEM_MAP = new HashMap<>();
 
-    public static void addItem(ShiftItem item) {
-        ITEM_MAP.put(item.id, item);
-    }
 
     public static ArrayList<ShiftItem> SHIFT_LIST = new ArrayList<>();
 
@@ -31,10 +24,12 @@ public class Shift {
         SHIFT_LIST.add(Integer.valueOf(item.id) -1, item);
     }
 
+
     /**
      * A ShiftItem representing one shift.
      */
-    public static class ShiftItem {
+    public static class ShiftItem implements Comparable<ShiftItem> {
+
         public final String id;
         public final String start;
         public final String end;
@@ -44,7 +39,15 @@ public class Shift {
         public final String endLongitude;
         public final String image;
 
+        @Override
+        public int compareTo(@NonNull ShiftItem shift) {
 
+            /* For Ascending order*/
+            //return this.this.id - shift.id;
+
+            /* For Descending order do like this */
+            return Integer.valueOf(shift.id) - Integer.valueOf(this.id);
+        }
 
         public ShiftItem(String id, String start, String end, String startLatitude,
                          String startLongitude, String endLatitude, String endLongitude,
@@ -60,5 +63,9 @@ public class Shift {
 
         }
 
+
+
     }//End Class ShiftItem
+
+
 }

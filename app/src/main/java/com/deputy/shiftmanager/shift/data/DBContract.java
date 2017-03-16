@@ -5,7 +5,7 @@ import android.provider.BaseColumns;
 class DBContract {
 
 
-    public static final  int    DATABASE_VERSION    = 1;
+    public static final  int    DATABASE_VERSION    = 2;
     public static final String DATABASE_NAME       = "ShiftManager.db";
     private static final String TEXT_TYPE           = " TEXT";
     //private static final String INT_TYPE            = " INTEGER";

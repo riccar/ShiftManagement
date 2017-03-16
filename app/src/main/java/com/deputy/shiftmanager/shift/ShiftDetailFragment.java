@@ -10,6 +10,7 @@ import android.view.ViewGroup;
 import android.widget.TextView;
 
 import com.deputy.shiftmanager.R;
+import com.deputy.shiftmanager.shift.Util.date;
 import com.deputy.shiftmanager.shift.model.Shift;
 import com.google.android.gms.maps.CameraUpdateFactory;
 import com.google.android.gms.maps.GoogleMap;
@@ -62,7 +63,7 @@ public class ShiftDetailFragment extends Fragment implements OnMapReadyCallback 
 
             CollapsingToolbarLayout appBarLayout = (CollapsingToolbarLayout) activity.findViewById(R.id.toolbar_layout);
             if (appBarLayout != null) {
-                appBarLayout.setTitle(mItem.id);
+                appBarLayout.setTitle(String.valueOf(mItem.id));
             }
         }
 
@@ -81,11 +82,19 @@ public class ShiftDetailFragment extends Fragment implements OnMapReadyCallback 
     public void onMapReady(GoogleMap googleMap) {
 
         // Add a marker in Sydney and move the camera
-        LatLng startPoint = new LatLng(Double.parseDouble(mItem.startLatitude), Double.parseDouble(mItem.startLongitude));
-        LatLng endPoint = new LatLng(Double.parseDouble(mItem.endLatitude), Double.parseDouble(mItem.endLongitude));
+        LatLng startPoint = new LatLng(Double.parseDouble(mItem.startLatitude),
+                Double.parseDouble(mItem.startLongitude));
+        LatLng endPoint = new LatLng(Double.parseDouble(mItem.endLatitude),
+                Double.parseDouble(mItem.endLongitude));
         //LatLng sydney = new LatLng(-34, 151);
         googleMap.addMarker(new MarkerOptions().position(startPoint).title("Start"));
         googleMap.addMarker(new MarkerOptions().position(endPoint).title("End"));
+        /*Polyline line = googleMap.addPolyline(new PolylineOptions()
+                .add(startPoint, endPoint)
+                .width(4)
+                .color(Color.BLUE)
+                .geodesic(false));*/
+
         //CameraUpdate zoom = CameraUpdateFactory.zoomTo(15);
         //mMap.animateCamera(zoom);
         googleMap.moveCamera(CameraUpdateFactory.newLatLngZoom(startPoint, 13));
@@ -101,8 +110,11 @@ public class ShiftDetailFragment extends Fragment implements OnMapReadyCallback 
             TextView shiftDetail = ((TextView) rootView.findViewById(R.id.fragment_shift_detail));//.setText(mItem.id + lineBreak + mItem.start + lineBreak + mItem.end);
 
             shiftDetail.setText("ID: " + mItem.id  + lineBreak);
-            shiftDetail.append("Start Date: " + mItem.start + lineBreak);
-            shiftDetail.append("End Date: " + mItem.end + lineBreak);
+            shiftDetail.append("Start Date: " + date.formatStringDate(mItem.start
+            ) + lineBreak);
+            if (mItem.end.equals("")) shiftDetail.append("End Date: Shift in progress" + lineBreak);
+            else shiftDetail.append("End Date: " + date.formatStringDate(mItem.end
+            ) + lineBreak);
             shiftDetail.append("Start Latitude: " +  mItem.startLatitude + lineBreak);
             shiftDetail.append("Start Longitude: " +  mItem.startLongitude + lineBreak);
             shiftDetail.append("End Latitude: " +  mItem.endLatitude + lineBreak);
