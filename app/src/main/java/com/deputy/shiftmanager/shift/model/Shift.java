@@ -24,6 +24,12 @@ public class Shift {
         SHIFT_LIST.add(Integer.valueOf(item.id) -1, item);
     }
 
+    public static ShiftItem getShift(Integer index) {
+
+        return SHIFT_LIST.get(index);
+
+    }
+
 
     /**
      * A ShiftItem representing one shift.

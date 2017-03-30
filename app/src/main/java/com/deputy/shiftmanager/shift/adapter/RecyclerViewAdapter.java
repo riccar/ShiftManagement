@@ -38,6 +38,7 @@ public class RecyclerViewAdapter
     public RecyclerViewAdapter(List<Shift.ShiftItem> items, Context appContext) {
         mValues = items;
         mContext = appContext;
+
     }
 
     @Override
@@ -55,13 +56,10 @@ public class RecyclerViewAdapter
         //holder.mItem = mValues.get(position);
         holder.mItem = mValues.get(Integer.valueOf(mValues.get(position).id) - 1);
         holder.mIdView.setText(mValues.get(position).id);
-        //holder.mContentView.setText(mValues.get(position).start);
         holder.mContentView.setText(date.formatStringDate(mValues.get(position).start
         ));
-        //String uri = "https://twitter.com/AndroidDev";
+
         Uri imageUri = Uri.parse(mValues.get(position).image);
-        //Uri imageUri = Uri.parse(uri);
-        //holder.mImageView.setImageURI(imageUri);
 
         Picasso
                 .with(mContext)
@@ -81,8 +79,7 @@ public class RecyclerViewAdapter
                 if (ShiftListActivity.TWO_PANES) {
                     Bundle arguments = new Bundle();
                     arguments.putString(ShiftDetailFragment.ARG_ITEM_ID, holder.mItem.id);
-                    //arguments.putInt(ShiftDetailFragment.ARG_ITEM_ID, holder.mItem.id);
-                    //arguments.putBundle("shifts", mValues);
+
                     ShiftDetailFragment fragment = new ShiftDetailFragment();
                     fragment.setArguments(arguments);
 

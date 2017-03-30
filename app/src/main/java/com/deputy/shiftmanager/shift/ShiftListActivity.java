@@ -32,19 +32,10 @@ import com.google.android.gms.common.ConnectionResult;
 import com.google.android.gms.common.api.GoogleApiClient;
 import com.google.android.gms.location.LocationServices;
 
-import org.json.JSONException;
-import org.json.JSONObject;
-
-import java.text.DateFormat;
-import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Collections;
-import java.util.Date;
 import java.util.List;
-import java.util.TimeZone;
 
-import okhttp3.MediaType;
-import okhttp3.RequestBody;
 import retrofit2.Call;
 import retrofit2.Callback;
 import retrofit2.Response;
@@ -124,13 +115,13 @@ public class ShiftListActivity extends AppCompatActivity
         }
 
         //Setting RecycleView layout
-        //recyclerViewShift.setLayoutManager(new LinearLayoutManager(this));
+
         recyclerViewShift = (RecyclerView) findViewById(R.id.shift_list);
 
         //TODO: move getShift call to a headless fragment to avoid execution in UI thread
         if (isNetworkAvailable()) {
 
-            getShifts();
+            ApiClient.getShifts(recyclerViewShift, getApplicationContext());
 
         } else {
             //Show shifts from DB when no network connection is available
@@ -139,7 +130,7 @@ public class ShiftListActivity extends AppCompatActivity
             DBHelper dbHelper = new DBHelper(getApplicationContext());
             shiftList = dbHelper.getShiftsFromDB();
 
-            recyclerViewShift.setAdapter(new RecyclerViewAdapter(shiftList, this ));
+            recyclerViewShift.setAdapter(new RecyclerViewAdapter(shiftList, this));
             //next line commented for retrofit
             //setupRecyclerView((RecyclerView) recyclerView, shiftList);
 
@@ -154,11 +145,10 @@ public class ShiftListActivity extends AppCompatActivity
 
             @Override
             public void onRefresh() {
-                // call your Refresh method here
-                //TODO: Move into getShift the network validation and the shift returned from db
+
                 if (isNetworkAvailable()) {
 
-                    getShifts();
+                    ApiClient.getShifts(recyclerViewShift, getApplicationContext());
 
                 } else {
                     //Show shifts from DB when no network connection is available
@@ -167,7 +157,8 @@ public class ShiftListActivity extends AppCompatActivity
                     DBHelper dbHelper = new DBHelper(getApplicationContext());
                     shiftList = dbHelper.getShiftsFromDB();
 
-                    recyclerViewShift.setAdapter(new RecyclerViewAdapter(shiftList, getApplicationContext() ));
+                    recyclerViewShift.setAdapter(new RecyclerViewAdapter(shiftList,
+                            getApplicationContext()));
                     //next line commented for retrofit
                     //setupRecyclerView((RecyclerView) recyclerView, shiftList);
 
@@ -189,7 +180,7 @@ public class ShiftListActivity extends AppCompatActivity
                 break;
             case R.id.fabStart:
                 if (isNetworkAvailable()) {
-                    updateShift("start");
+                    ApiClient.updateShift("start", latitude, longitude, coordLayout, this);
                 } else {
                     Snackbar.make(coordLayout, getString(R.string.no_network_error), Snackbar.LENGTH_LONG)
                             .setAction("Action", null).show();
@@ -197,7 +188,7 @@ public class ShiftListActivity extends AppCompatActivity
                 break;
             case R.id.fabStop:
                 if (isNetworkAvailable()) {
-                    updateShift("stop");
+                    ApiClient.updateShift("stop", latitude, longitude, coordLayout, this);
                 } else {
                     Snackbar.make(coordLayout, getString(R.string.no_network_error), Snackbar.LENGTH_LONG)
                             .setAction("Action", null).show();
@@ -288,106 +279,4 @@ public class ShiftListActivity extends AppCompatActivity
     }
 
 
-    private void updateShift(String apiCall) {
-        //Getting today's date and time
-        DateFormat df =new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss");
-        df.setTimeZone(TimeZone.getDefault());
-        String nowAsISO = df.format(new Date());
-
-        JSONObject JSONQuery = new JSONObject();
-
-        try {
-            JSONQuery.put("time", nowAsISO);
-            JSONQuery.put("latitude", Double.toString(latitude));
-            JSONQuery.put("longitude", Double.toString(longitude));
-        } catch (JSONException e) {
-            Log.v(LOG_TAG, e.getMessage());
-        }
-
-        ApiInterface apiInterface =
-                ApiClient.getClient().create(ApiInterface.class);
-        Log.v(LOG_TAG, JSONQuery.toString());
-
-        //Creating OkHTTP RequestBody to correctly parse JSON object as string
-        RequestBody shiftData =
-                RequestBody.create(MediaType.parse("text/plain"), JSONQuery.toString());
-
-        if (apiCall.equals("start"))  {
-            Call<String> call = apiInterface.startShift(shiftData);
-            call.enqueue(new Callback<String>() {
-                @Override
-                public void onResponse(Call<String> call, Response<String> response) {
-                    //Due to the lack of a good response coding, use keyword from response message
-                    if (response.body().indexOf("good") > 0) {
-                        Snackbar.make(coordLayout, getString(R.string.shift_start_success),
-                                Snackbar.LENGTH_LONG).setAction("Action", null).show();
-                    } else {
-                        Snackbar.make(coordLayout, getString(R.string.shift_start_error),
-                                Snackbar.LENGTH_LONG).setAction("Action", null).show();
-                    }
-                }
-                @Override
-                public void onFailure(Call<String> call, Throwable t) {
-                    // Log error here since request failed
-                    Log.e(LOG_TAG, t.toString());
-                }
-            });
-        }
-        else { //Stop Shift
-            Call<String> call = apiInterface.stopShift(shiftData);
-            call.enqueue(new Callback<String>() {
-                @Override
-                public void onResponse(Call<String> call, Response<String> response) {
-                    //Due to the lack of a good response coding, use keyword from response message
-                    if (response.body().indexOf("good") > 0) {
-                        Snackbar.make(coordLayout, getString(R.string.shift_stop_success),
-                                Snackbar.LENGTH_LONG).setAction("Action", null).show();
-                    } else {
-                        Snackbar.make(coordLayout, getString(R.string.shift_stop_error),
-                                Snackbar.LENGTH_LONG).setAction("Action", null).show();
-                    }
-                }
-                @Override
-                public void onFailure(Call<String> call, Throwable t) {
-                    // Log error here since request failed
-                    Log.e(LOG_TAG, t.toString());
-                }
-            });
-        }
-    }
-
-    //Get Shift. Executes an API call to get all the shifts and populate adapter
-    private void getShifts() {
-        ApiInterface apiInterface =
-                ApiClient.getClient().create(ApiInterface.class);
-
-        Call<ArrayList<Shift.ShiftItem>> call = apiInterface.getShifts();
-
-        call.enqueue(new Callback<ArrayList<Shift.ShiftItem>>() {
-            @Override
-            public void onResponse(Call<ArrayList<Shift.ShiftItem>> call,
-                                   Response<ArrayList<Shift.ShiftItem>> response) {
-
-                if (response.body().size() > 0) {
-                    ArrayList<Shift.ShiftItem> shifts = response.body();
-                    //Assigning the list of shift to the static Shift attribute so it can be
-                    //accessed from DetailFragment
-                    Collections.sort(shifts);
-                    SHIFT_LIST = shifts;
-                    recyclerViewShift.setAdapter(new RecyclerViewAdapter(shifts, getApplicationContext()));
-                    //Insert new shift in DB and update current shifts
-                    DBHelper dbHelper = new DBHelper(getApplicationContext());
-                    dbHelper.insertShiftInDB(shifts);
-
-                } else {
-                    //TODO: Identify response for empty list and return error message
-                }
-            }
-            @Override
-            public void onFailure(Call<ArrayList<Shift.ShiftItem>> call, Throwable t) {
-                // Log error here since request failed
-                Log.e(LOG_TAG, t.toString());
-            }
-        });
-    }
 }

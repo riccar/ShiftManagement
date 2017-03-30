@@ -39,10 +39,10 @@
         android:layout_gravity="bottom|end"
         android:layout_marginRight="@dimen/fab_margin"
         android:visibility="invisible"
-        app:backgroundTint="@color/colorFabStart"
+        app:backgroundTint="@color/green"
         app:elevation="6dp"
         app:pressedTranslationZ="12dp"
-        android:src="@android:drawable/ic_input_add" />
+        android:src="@drawable/ic_start_shift" />
     <android.support.design.widget.FloatingActionButton
         android:id="@+id/fabStop"
         android:layout_width="wrap_content"
@@ -52,16 +52,16 @@
         android:layout_marginRight="@dimen/fab_margin"
         android:visibility="invisible"
         app:elevation="6dp"
-        app:backgroundTint="@color/colorFabStop"
+        app:backgroundTint="@color/red"
         app:pressedTranslationZ="12dp"
-        android:src="@android:drawable/ic_input_delete" />
+        android:src="@drawable/ic_stop_shift" />
     <android.support.design.widget.FloatingActionButton
         android:id="@+id/fab"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_gravity="bottom|end"
         app:elevation="6dp"
-        app:backgroundTint="@color/colorAccent"
+        app:backgroundTint="@color/darkblue"
         app:pressedTranslationZ="12dp"
         android:layout_margin="@dimen/fab_margin"
         app:srcCompat="@android:drawable/ic_input_add" />

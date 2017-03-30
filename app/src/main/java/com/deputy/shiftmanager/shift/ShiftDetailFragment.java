@@ -61,7 +61,8 @@ public class ShiftDetailFragment extends Fragment implements OnMapReadyCallback 
 
             Activity activity = this.getActivity();
 
-            CollapsingToolbarLayout appBarLayout = (CollapsingToolbarLayout) activity.findViewById(R.id.toolbar_layout);
+            CollapsingToolbarLayout appBarLayout = (CollapsingToolbarLayout)
+                    activity.findViewById(R.id.toolbar_layout);
             if (appBarLayout != null) {
                 appBarLayout.setTitle(String.valueOf(mItem.id));
             }
@@ -107,7 +108,7 @@ public class ShiftDetailFragment extends Fragment implements OnMapReadyCallback 
 
         // Show the content as text in a TextView.
         if (mItem != null) {
-            TextView shiftDetail = ((TextView) rootView.findViewById(R.id.fragment_shift_detail));//.setText(mItem.id + lineBreak + mItem.start + lineBreak + mItem.end);
+            TextView shiftDetail = ((TextView) rootView.findViewById(R.id.fragment_shift_detail));
 
             shiftDetail.setText("ID: " + mItem.id  + lineBreak);
             shiftDetail.append("Start Date: " + date.formatStringDate(mItem.start
