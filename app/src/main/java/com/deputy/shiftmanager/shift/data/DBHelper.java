@@ -12,11 +12,11 @@ import java.util.List;
 
 public class DBHelper extends SQLiteOpenHelper {
 
-    private final Context mContext;
+    private final Context context;
 
-    public DBHelper(Context context) {
-        super(context, DBContract.DATABASE_NAME, null, DBContract.DATABASE_VERSION);
-        mContext = context;
+    public DBHelper(Context appContext) {
+        super(appContext, DBContract.DATABASE_NAME, null, DBContract.DATABASE_VERSION);
+        context = appContext;
     }
 
     // Method is called during creation of the database
@@ -36,7 +36,7 @@ public class DBHelper extends SQLiteOpenHelper {
     //Inserts new shift in a database so it's available when device has no network connection
     public void insertShiftInDB(ArrayList<Shift.ShiftItem> shifts) {
         SQLiteDatabase db;
-        DBHelper dbHelper = new DBHelper(mContext);
+        DBHelper dbHelper = new DBHelper(context);
         db = dbHelper.getWritableDatabase();
 
         //db.execSQL("delete from " + DBContract.Shifts.TABLE_NAME);
@@ -61,7 +61,7 @@ public class DBHelper extends SQLiteOpenHelper {
     public List<Shift.ShiftItem> getShiftsFromDB() {
 
         SQLiteDatabase db;
-        DBHelper dbHelper = new DBHelper(mContext);
+        DBHelper dbHelper = new DBHelper(context);
         db = dbHelper.getReadableDatabase();
 
         String[] fields =  {DBContract.Shifts._ID, DBContract.Shifts.COLUMN_NAME_COL1,
@@ -75,9 +75,8 @@ public class DBHelper extends SQLiteOpenHelper {
                 null, //Value for condition
                 null,null, DBContract.Shifts._ID + " DESC"); //GroupBy, Having and OrderBy
 
-        //cursor.moveToFirst();
         ArrayList<Shift.ShiftItem> shiftList = new ArrayList<>();
-        //Shift shift = new Shift();
+
         while (cursor.moveToNext()) {
             Shift.ShiftItem shiftItem = new Shift.ShiftItem(cursor.getString(0),cursor.getString(1),
                     cursor.getString(2),cursor.getString(3),cursor.getString(4),

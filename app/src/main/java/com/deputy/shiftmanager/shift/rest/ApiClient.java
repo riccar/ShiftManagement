@@ -1,9 +1,9 @@
-package com.deputy.shiftmanager.shift.rest;
-
 /**
- * Created by Ricardo on 27/02/2017.
- * Retrofit builder class
+ * ApiClient class that implements the API calls using Retrofit library. It allos create the
+ * Retrofit client object on the getApiClient method
  */
+
+package com.deputy.shiftmanager.shift.rest;
 
 import android.content.Context;
 import android.support.design.widget.CoordinatorLayout;
@@ -31,6 +31,7 @@ import okhttp3.MediaType;
 import okhttp3.OkHttpClient;
 import okhttp3.RequestBody;
 import okhttp3.logging.HttpLoggingInterceptor;
+
 import retrofit2.Call;
 import retrofit2.Callback;
 import retrofit2.Response;
@@ -45,7 +46,8 @@ public class ApiClient extends AppCompatActivity {
     private static Retrofit retrofit = null;
     private static final String LOG_TAG = ApiClient.class.getSimpleName();
 
-    public static Retrofit getClient() {
+    /** Returns the retrofit client pointing to the the API URL */
+    private static Retrofit getApiClient() {
 
         HttpLoggingInterceptor logging = new HttpLoggingInterceptor();
 
@@ -69,10 +71,10 @@ public class ApiClient extends AppCompatActivity {
         return retrofit;
     }
 
+    /** Makes a POST API call to start or stop shifts. */
     public static void updateShift(String apiCall, Double latitude, Double longitude,
                                    final CoordinatorLayout rootView, final Context context) {
 
-        //mCoordLayout = (CoordinatorLayout) rootView.findViewById(R.id.coordinatorLayout);
 
         //Getting today's date and time
         DateFormat df =new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss");
@@ -86,11 +88,13 @@ public class ApiClient extends AppCompatActivity {
             JSONQuery.put("latitude", Double.toString(latitude));
             JSONQuery.put("longitude", Double.toString(longitude));
         } catch (JSONException e) {
-            Log.v(LOG_TAG, e.getMessage());
+            e.printStackTrace();
+            Snackbar.make(rootView, context.getString(R.string.api_response_parse_error),
+                    Snackbar.LENGTH_LONG).setAction("Action", null).show();
         }
 
         ApiInterface apiInterface =
-                ApiClient.getClient().create(ApiInterface.class);
+                ApiClient.getApiClient().create(ApiInterface.class);
         Log.v(LOG_TAG, JSONQuery.toString());
 
         //Creating OkHTTP RequestBody to correctly parse JSON object as string
@@ -141,10 +145,10 @@ public class ApiClient extends AppCompatActivity {
         }
     }
 
-    //Get Shift. Executes an API call to get all the shifts and populate adapter
-    public static void getShifts(final RecyclerView recyclerViewShift, final Context context) {
+    /**Makes a GET API call to get all the shifts and populate adapter */
+    public static void getShifts(final RecyclerView recyclerViewShift, final CoordinatorLayout rootView, final Context context) {
         ApiInterface apiInterface =
-                ApiClient.getClient().create(ApiInterface.class);
+                ApiClient.getApiClient().create(ApiInterface.class);
 
         Call<ArrayList<Shift.ShiftItem>> call = apiInterface.getShifts();
 
@@ -159,15 +163,15 @@ public class ApiClient extends AppCompatActivity {
                     //accessed from DetailFragment
                     Collections.sort(shifts);
                     SHIFT_LIST = shifts;
-
-                    //RecyclerView recyclerViewShift = (RecyclerView) findViewById(R.id.shift_list);
                     recyclerViewShift.setAdapter(new RecyclerViewAdapter(shifts, context));
                     //Insert new shift in DB and update current shifts
                     DBHelper dbHelper = new DBHelper(context);
                     dbHelper.insertShiftInDB(shifts);
 
                 } else {
-                    //TODO: Identify response for empty list and return error message
+
+                    Snackbar.make(rootView, context.getString(R.string.empty_shift_list),
+                            Snackbar.LENGTH_LONG).setAction("Action", null).show();
                 }
             }
             @Override

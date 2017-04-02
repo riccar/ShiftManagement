@@ -1,3 +1,10 @@
+/**
+ * An activity representing a single Shift detail screen. This
+ * activity is only used narrow width devices. On tablet-size devices,
+ * item details are presented side-by-side with a list of items
+ * in a {@link ShiftListActivity}.
+ */
+
 package com.deputy.shiftmanager.shift;
 
 import android.content.Intent;
@@ -9,12 +16,6 @@ import android.view.MenuItem;
 
 import com.deputy.shiftmanager.R;
 
-/**
- * An activity representing a single Shift detail screen. This
- * activity is only used narrow width devices. On tablet-size devices,
- * item details are presented side-by-side with a list of items
- * in a {@link ShiftListActivity}.
- */
 public class ShiftDetailActivity extends AppCompatActivity {
 
     @Override

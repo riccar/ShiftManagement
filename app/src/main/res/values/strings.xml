@@ -8,10 +8,11 @@
 
     <!--Snack bar messages-->
     <string name="no_network_error">No network connection detected</string>
+    <string name="date_parsing_error">Error on date format. Please contact support</string>
     <string name="shift_start_success">The new shift was successfully started</string>
     <string name="shift_stop_success">The shift was successfully stopped</string>
     <string name="shift_start_error">A shift is running. Stop it before creating a new one</string>
     <string name="shift_stop_error">No shift is running</string>
-
-
+    <string name="api_response_parse_error">Error parsing response. Please contact support</string>
+    <string name="empty_shift_list">No shift found</string>
 </resources>

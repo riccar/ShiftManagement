@@ -1,3 +1,9 @@
+/**
+ * A class extending from RecycleViewAdapter that handles the RecycleView structure
+ * to show all the shifts as a list view. It also handles the click of every shift item
+ * so it shows the proper detail view depending on the device screen size
+ */
+
 package com.deputy.shiftmanager.shift.adapter;
 
 import android.content.Context;
@@ -12,32 +18,29 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.widget.ImageView;
 import android.widget.TextView;
+
 import com.deputy.shiftmanager.R;
 import com.deputy.shiftmanager.shift.ShiftDetailActivity;
 import com.deputy.shiftmanager.shift.ShiftDetailFragment;
 import com.deputy.shiftmanager.shift.ShiftListActivity;
 import com.deputy.shiftmanager.shift.Util.date;
 import com.deputy.shiftmanager.shift.model.Shift;
-import com.squareup.picasso.MemoryPolicy;
+
 import com.squareup.picasso.Picasso;
 
 import java.util.List;
-
-/**
- * Created by Ricardo on 23/02/2017.
- */
 
 public class RecyclerViewAdapter
         extends RecyclerView.Adapter<RecyclerViewAdapter.ViewHolder> {
 
     private final String LOG_TAG = RecyclerViewAdapter.class.getSimpleName();
-    private final List<Shift.ShiftItem> mValues;
-    private final Context mContext;
+    private final List<Shift.ShiftItem> shiftItems;
+    private final Context context;
 
 
     public RecyclerViewAdapter(List<Shift.ShiftItem> items, Context appContext) {
-        mValues = items;
-        mContext = appContext;
+        shiftItems = items;
+        context = appContext;
 
     }
 
@@ -54,24 +57,21 @@ public class RecyclerViewAdapter
         //in the position of the clicked value,
         //assign to holder.mItem  the shift in the position that matches the id of the clicked value
         //holder.mItem = mValues.get(position);
-        holder.mItem = mValues.get(Integer.valueOf(mValues.get(position).id) - 1);
-        holder.mIdView.setText(mValues.get(position).id);
-        holder.mContentView.setText(date.formatStringDate(mValues.get(position).start
-        ));
+        holder.mItem = shiftItems.get(Integer.valueOf(shiftItems.get(position).id) - 1);
+        holder.idView.setText(shiftItems.get(position).id);
+        holder.contentView.setText(date.formatStringDate(shiftItems.get(position).start, context));
 
-        Uri imageUri = Uri.parse(mValues.get(position).image);
+        Uri imageUri = Uri.parse(shiftItems.get(position).image);
 
         Picasso
-                .with(mContext)
+                .with(context)
                 .load(imageUri)
                 .fit()
                 //.memoryPolicy(MemoryPolicy.NO_CACHE)
-                .memoryPolicy(MemoryPolicy.NO_CACHE)
-                //.networkPolicy(NetworkPolicy.NO_CACHE)
                 .placeholder(R.mipmap.ic_launcher)
-                .into(holder.mImageView);
+                .into(holder.imageView);
 
-        holder.mView.setOnClickListener(new View.OnClickListener() {
+        holder.view.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
 
@@ -83,7 +83,7 @@ public class RecyclerViewAdapter
                     ShiftDetailFragment fragment = new ShiftDetailFragment();
                     fragment.setArguments(arguments);
 
-                    FragmentManager fragmentManager =  ((FragmentActivity) mContext).getSupportFragmentManager();
+                    FragmentManager fragmentManager =  ((FragmentActivity) context).getSupportFragmentManager();
                     fragmentManager.beginTransaction()
                             .replace(R.id.shift_detail_container, fragment)
                             .commit();
@@ -99,29 +99,29 @@ public class RecyclerViewAdapter
 
     @Override
     public int getItemCount() {
-        return mValues.size();
+        return shiftItems.size();
     }
 
     public class ViewHolder extends RecyclerView.ViewHolder {
-        public final View mView;
-        public final TextView mIdView;
-        public final TextView mContentView;
-        public final ImageView mImageView;
+        public final View view;
+        public final TextView idView;
+        public final TextView contentView;
+        public final ImageView imageView;
 
         public Shift.ShiftItem mItem;
 
         public ViewHolder(View view) {
             super(view);
-            mView = view;
-            mIdView = (TextView) view.findViewById(R.id.id);
-            mContentView = (TextView) view.findViewById(R.id.content);
-            mImageView = (ImageView) view.findViewById(R.id.image);
+            this.view = view;
+            this.idView = (TextView) view.findViewById(R.id.id);
+            this.contentView = (TextView) view.findViewById(R.id.content);
+            this.imageView = (ImageView) view.findViewById(R.id.image);
 
         }
 
         @Override
         public String toString() {
-            return super.toString() + " '" + mContentView.getText() + "'";
+            return super.toString() + " '" + contentView.getText() + "'";
         }
 
 

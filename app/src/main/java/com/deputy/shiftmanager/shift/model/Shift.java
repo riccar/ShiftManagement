@@ -1,35 +1,23 @@
+/**
+ * Shift class to model the shifts. It contains a ShiftItem sub class that implements comparable
+ * so it can be sorted and also use as data type for the ArrayList that holds all the shifts
+ * received byt the API call or from the Database when no internet connection is available
+ */
+
 package com.deputy.shiftmanager.shift.model;
 
 import android.support.annotation.NonNull;
 
 import java.util.ArrayList;
 
-/**
- * Shift class to model the shifts.
- */
 public class Shift {
-
-
 
     public static ArrayList<ShiftItem> SHIFT_LIST = new ArrayList<>();
 
-// --Commented out by Inspection START (10/03/2017 8:04 AM):
-//    public ArrayList<ShiftItem> getResults() {
-//        return SHIFT_LIST;
-//    }
-// --Commented out by Inspection STOP (10/03/2017 8:04 AM)
 
     public static void addShift(ShiftItem item) {
-
         SHIFT_LIST.add(Integer.valueOf(item.id) -1, item);
     }
-
-    public static ShiftItem getShift(Integer index) {
-
-        return SHIFT_LIST.get(index);
-
-    }
-
 
     /**
      * A ShiftItem representing one shift.
@@ -69,9 +57,6 @@ public class Shift {
 
         }
 
-
-
     }//End Class ShiftItem
-
 
 }

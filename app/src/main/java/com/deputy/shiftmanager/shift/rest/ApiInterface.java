@@ -1,3 +1,8 @@
+/**
+ * Interface that defines the POST and GET API calls with their corresponded parameters as header
+ * values.
+ * */
+
 package com.deputy.shiftmanager.shift.rest;
 
 import com.deputy.shiftmanager.shift.model.Shift;
@@ -11,7 +16,7 @@ import retrofit2.http.GET;
 import retrofit2.http.Headers;
 import retrofit2.http.POST;
 
-public interface ApiInterface {
+interface ApiInterface {
 
     String SHA1 = "d4e7430f1534a12df46cedd1ac369935436dbb94  -";
 

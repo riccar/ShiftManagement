@@ -1,3 +1,10 @@
+/**
+ * A fragment representing a single Shift detail screen.
+ * This fragment is either contained in a {@link ShiftListActivity}
+ * in two-pane mode (on tablets) or a {@link ShiftDetailActivity}
+ * on handsets.
+ */
+
 package com.deputy.shiftmanager.shift;
 
 import android.app.Activity;
@@ -19,13 +26,6 @@ import com.google.android.gms.maps.SupportMapFragment;
 import com.google.android.gms.maps.model.LatLng;
 import com.google.android.gms.maps.model.MarkerOptions;
 
-
-/**
- * A fragment representing a single Shift detail screen.
- * This fragment is either contained in a {@link ShiftListActivity}
- * in two-pane mode (on tablets) or a {@link ShiftDetailActivity}
- * on handsets.
- */
 public class ShiftDetailFragment extends Fragment implements OnMapReadyCallback {
     /**
      * The fragment argument representing the item ID that this fragment
@@ -36,8 +36,7 @@ public class ShiftDetailFragment extends Fragment implements OnMapReadyCallback 
     /**
      * The content this fragment is presenting.
      */
-
-    private Shift.ShiftItem mItem;
+    private Shift.ShiftItem shiftItem;
 
     private static final String lineBreak = System.getProperty("line.separator");
 
@@ -57,17 +56,16 @@ public class ShiftDetailFragment extends Fragment implements OnMapReadyCallback 
 
             //ITEM_MAP is no longer used after implementing networking with retrofit
             //mItem = Shift.ITEM_MAP.get(getArguments().getString(ARG_ITEM_ID));
-            mItem = Shift.SHIFT_LIST.get(Integer.valueOf(getArguments().getString(ARG_ITEM_ID)) - 1);
+            shiftItem = Shift.SHIFT_LIST.get(Integer.valueOf(getArguments().getString(ARG_ITEM_ID)) - 1);
 
             Activity activity = this.getActivity();
 
             CollapsingToolbarLayout appBarLayout = (CollapsingToolbarLayout)
                     activity.findViewById(R.id.toolbar_layout);
             if (appBarLayout != null) {
-                appBarLayout.setTitle(String.valueOf(mItem.id));
+                appBarLayout.setTitle(String.valueOf(shiftItem.id));
             }
         }
-
     }
 
     /**
@@ -83,21 +81,12 @@ public class ShiftDetailFragment extends Fragment implements OnMapReadyCallback 
     public void onMapReady(GoogleMap googleMap) {
 
         // Add a marker in Sydney and move the camera
-        LatLng startPoint = new LatLng(Double.parseDouble(mItem.startLatitude),
-                Double.parseDouble(mItem.startLongitude));
-        LatLng endPoint = new LatLng(Double.parseDouble(mItem.endLatitude),
-                Double.parseDouble(mItem.endLongitude));
-        //LatLng sydney = new LatLng(-34, 151);
+        LatLng startPoint = new LatLng(Double.parseDouble(shiftItem.startLatitude),
+                Double.parseDouble(shiftItem.startLongitude));
+        LatLng endPoint = new LatLng(Double.parseDouble(shiftItem.endLatitude),
+                Double.parseDouble(shiftItem.endLongitude));
         googleMap.addMarker(new MarkerOptions().position(startPoint).title("Start"));
         googleMap.addMarker(new MarkerOptions().position(endPoint).title("End"));
-        /*Polyline line = googleMap.addPolyline(new PolylineOptions()
-                .add(startPoint, endPoint)
-                .width(4)
-                .color(Color.BLUE)
-                .geodesic(false));*/
-
-        //CameraUpdate zoom = CameraUpdateFactory.zoomTo(15);
-        //mMap.animateCamera(zoom);
         googleMap.moveCamera(CameraUpdateFactory.newLatLngZoom(startPoint, 13));
     }
 
@@ -107,20 +96,21 @@ public class ShiftDetailFragment extends Fragment implements OnMapReadyCallback 
         View rootView = inflater.inflate(R.layout.fragment_shift_detail, container, false);
 
         // Show the content as text in a TextView.
-        if (mItem != null) {
+        if (shiftItem != null) {
             TextView shiftDetail = ((TextView) rootView.findViewById(R.id.fragment_shift_detail));
 
-            shiftDetail.setText("ID: " + mItem.id  + lineBreak);
-            shiftDetail.append("Start Date: " + date.formatStringDate(mItem.start
+            shiftDetail.setText("ID: " + shiftItem.id  + lineBreak);
+            shiftDetail.append("Start Date: " + date.formatStringDate(shiftItem.start, getContext()
             ) + lineBreak);
-            if (mItem.end.equals("")) shiftDetail.append("End Date: Shift in progress" + lineBreak);
-            else shiftDetail.append("End Date: " + date.formatStringDate(mItem.end
+            if (shiftItem.end.equals("")) shiftDetail.append("End Date: Shift in progress" + lineBreak);
+            else shiftDetail.append("End Date: " + date.formatStringDate(shiftItem.end, getContext()
             ) + lineBreak);
-            shiftDetail.append("Start Latitude: " +  mItem.startLatitude + lineBreak);
-            shiftDetail.append("Start Longitude: " +  mItem.startLongitude + lineBreak);
-            shiftDetail.append("End Latitude: " +  mItem.endLatitude + lineBreak);
-            shiftDetail.append("End Longitude: " +  mItem.endLongitude + lineBreak);
-            //shiftDetail.append("Image: " +  mItem.image + lineBreak);
+            //Uncomment to debug coordinates
+            /*shiftDetail.append("Start Latitude: " +  shiftItem.startLatitude + lineBreak);
+            shiftDetail.append("Start Longitude: " +  shiftItem.startLongitude + lineBreak);
+            shiftDetail.append("End Latitude: " +  shiftItem.endLatitude + lineBreak);
+            shiftDetail.append("End Longitude: " +  shiftItem.endLongitude + lineBreak);*/
+
 
         }
 
@@ -135,6 +125,5 @@ public class ShiftDetailFragment extends Fragment implements OnMapReadyCallback 
         SupportMapFragment mapFragment = (SupportMapFragment) getChildFragmentManager()
                 .findFragmentById(R.id.map);
         mapFragment.getMapAsync(this);
-        //getMapAsync(this);
     }
 }

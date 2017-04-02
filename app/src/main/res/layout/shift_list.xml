@@ -13,8 +13,8 @@
         android:name="com.deputy.shiftmanager.ShiftListFragment"
         android:layout_width="match_parent"
         android:layout_height="match_parent"
-        android:layout_marginLeft="16dp"
-        android:layout_marginRight="16dp"
+        android:layout_marginLeft="@dimen/text_margin"
+        android:layout_marginRight="@dimen/text_margin"
         app:layoutManager="LinearLayoutManager"
         tools:context="com.deputy.shiftmanager.shift.ShiftListActivity"
     tools:listitem="@layout/shift_list_content" />

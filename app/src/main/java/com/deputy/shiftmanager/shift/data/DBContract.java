@@ -1,3 +1,7 @@
+/**
+ * A DB Contract class defining all the tables names, fields and data types
+ */
+
 package com.deputy.shiftmanager.shift.data;
 
 import android.provider.BaseColumns;
@@ -8,6 +12,7 @@ class DBContract {
     public static final  int    DATABASE_VERSION    = 2;
     public static final String DATABASE_NAME       = "ShiftManager.db";
     private static final String TEXT_TYPE           = " TEXT";
+    //Types not in used. Uncomment when required
     //private static final String INT_TYPE            = " INTEGER";
     //private static final String REAL_TYPE           = " REAL";
     //private static final String NUMERIC_TYPE        = " NUMERIC";
